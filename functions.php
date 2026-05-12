@@ -138,6 +138,7 @@ add_action( 'wp_head', 'stevebaron_meta_tags', 6 );
 require STEVEBARON_DIR . '/inc/customizer.php';
 require STEVEBARON_DIR . '/inc/post-types.php';
 require STEVEBARON_DIR . '/inc/meta-boxes.php';
+require STEVEBARON_DIR . '/inc/setup-site.php';
 
 // ── Helper: reading time ──────────────────────────────────────────────────────
 
