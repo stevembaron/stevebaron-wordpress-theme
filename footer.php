@@ -61,6 +61,17 @@
     <span><?php echo esc_html(get_theme_mod('sb_footer_coordinates','40.7608° N · 111.8910° W')); ?></span>
   </div>
 
+  <small class="footer-altitude">
+    <?php
+    printf(
+      /* translators: %s is a rotating weather-observation term */
+      esc_html__( 'Built at 4,226 ft elevation · currently observing %s · press %s anywhere for the command palette', 'stevebaron' ),
+      '<span class="wx-rotate">barometric pressure</span>',
+      '<kbd>⌘K</kbd>'
+    );
+    ?>
+  </small>
+
 </footer>
 
 <?php wp_footer(); ?>

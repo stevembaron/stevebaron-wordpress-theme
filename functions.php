@@ -3,7 +3,7 @@
  * Steve Baron Theme — functions.php
  */
 
-define( 'STEVEBARON_VERSION', '1.0.1' );
+define( 'STEVEBARON_VERSION', '1.1.0' );
 define( 'STEVEBARON_DIR', get_template_directory() );
 define( 'STEVEBARON_URI', get_template_directory_uri() );
 
@@ -87,9 +87,110 @@ function stevebaron_customizer_css() {
 	$accent_2 = sanitize_hex_color( get_theme_mod( 'sb_accent_2_color', '#7c2d12' ) ) ?: '#7c2d12';
 	$hero_var = get_theme_mod( 'sb_hero_variant', 'topo' );
 	echo '<style id="sb-customizer-css">:root{--accent:' . esc_attr( $accent ) . ';--accent-2:' . esc_attr( $accent_2 ) . ';}</style>' . "\n";
-	echo '<script>window.SB_HERO_VARIANT=' . wp_json_encode( $hero_var ) . ';</script>' . "\n";
+	echo '<script>window.SB=' . wp_json_encode( [
+		'home' => home_url( '/' ),
+	] ) . ';window.SB_HERO_VARIANT=' . wp_json_encode( $hero_var ) . ';</script>' . "\n";
 }
 add_action( 'wp_head', 'stevebaron_customizer_css', 5 );
+
+// ── Dynamic SVG favicon keyed to accent color ────────────────────────────────
+
+function stevebaron_dynamic_favicon() {
+	if ( function_exists( 'has_site_icon' ) && has_site_icon() ) return;
+	$accent = sanitize_hex_color( get_theme_mod( 'sb_accent_color', '#c2410c' ) ) ?: '#c2410c';
+	$svg    = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100">'
+		. '<rect width="100" height="100" rx="22" fill="' . esc_attr( $accent ) . '"/>'
+		. '<text x="50" y="70" font-family="ui-sans-serif,system-ui,-apple-system,Segoe UI,sans-serif" font-size="62" font-weight="800" text-anchor="middle" fill="#fff">S</text>'
+		. '</svg>';
+	echo '<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,' . rawurlencode( $svg ) . '">' . "\n";
+}
+add_action( 'wp_head', 'stevebaron_dynamic_favicon', 4 );
+
+// ── JSON-LD structured data ──────────────────────────────────────────────────
+
+function stevebaron_jsonld() {
+	if ( is_admin() ) return;
+	$home = home_url( '/' );
+
+	if ( is_singular( 'post' ) ) {
+		global $post;
+		$schema = [
+			'@context'         => 'https://schema.org',
+			'@type'            => 'BlogPosting',
+			'headline'         => get_the_title( $post ),
+			'datePublished'    => get_the_date( 'c', $post ),
+			'dateModified'     => get_the_modified_date( 'c', $post ),
+			'mainEntityOfPage' => get_permalink( $post ),
+			'author'           => [
+				'@type' => 'Person',
+				'name'  => get_the_author_meta( 'display_name', $post->post_author ),
+				'url'   => $home,
+			],
+			'publisher'        => [
+				'@type' => 'Person',
+				'name'  => get_bloginfo( 'name' ),
+				'url'   => $home,
+			],
+		];
+		if ( has_post_thumbnail( $post ) ) {
+			$schema['image'] = get_the_post_thumbnail_url( $post, 'sb-hero' );
+		}
+		$desc = has_excerpt( $post )
+			? wp_strip_all_tags( get_the_excerpt( $post ) )
+			: wp_trim_words( wp_strip_all_tags( $post->post_content ), 30 );
+		if ( $desc ) $schema['description'] = $desc;
+		echo "\n<script type=\"application/ld+json\">" . wp_json_encode( $schema, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE ) . "</script>\n";
+		return;
+	}
+
+	if ( is_front_page() || is_page( [ 'about', 'cv', 'contact' ] ) ) {
+		$social = array_values( array_filter( [
+			get_theme_mod( 'sb_social_linkedin', '' ),
+			get_theme_mod( 'sb_social_twitter', '' ),
+			get_theme_mod( 'sb_social_github', '' ),
+			get_theme_mod( 'sb_social_instagram', '' ),
+			get_theme_mod( 'sb_social_facebook', '' ),
+		] ) );
+		$schema = [
+			'@context'    => 'https://schema.org',
+			'@type'       => 'Person',
+			'name'        => get_bloginfo( 'name' ),
+			'url'         => $home,
+			'jobTitle'    => 'Product, AI & Digital Transformation Executive',
+			'description' => get_theme_mod( 'sb_hero_subtext', get_bloginfo( 'description' ) ),
+			'address'     => [
+				'@type'           => 'PostalAddress',
+				'addressLocality' => 'Salt Lake City',
+				'addressRegion'   => 'UT',
+				'addressCountry'  => 'US',
+			],
+		];
+		$email = get_theme_mod( 'sb_social_email', '' );
+		if ( $email ) $schema['email'] = 'mailto:' . sanitize_email( $email );
+		if ( $social ) $schema['sameAs'] = $social;
+		if ( has_custom_logo() ) {
+			$logo_id = get_theme_mod( 'custom_logo' );
+			$img     = $logo_id ? wp_get_attachment_image_url( $logo_id, 'full' ) : '';
+			if ( $img ) $schema['image'] = $img;
+		}
+
+		$website = [
+			'@context' => 'https://schema.org',
+			'@type'    => 'WebSite',
+			'url'      => $home,
+			'name'     => get_bloginfo( 'name' ),
+			'potentialAction' => [
+				'@type'       => 'SearchAction',
+				'target'      => $home . '?s={search_term_string}',
+				'query-input' => 'required name=search_term_string',
+			],
+		];
+
+		echo "\n<script type=\"application/ld+json\">" . wp_json_encode( $schema,  JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE ) . "</script>\n";
+		echo "<script type=\"application/ld+json\">"   . wp_json_encode( $website, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE ) . "</script>\n";
+	}
+}
+add_action( 'wp_head', 'stevebaron_jsonld', 8 );
 
 // ── Open Graph + Twitter Card meta ───────────────────────────────────────────
 

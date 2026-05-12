@@ -1189,3 +1189,317 @@ img { max-width: 100%; height: auto; display: block; }
 }
 @keyframes sb-fade-in { from { opacity: 0; } to { opacity: 1; } }
 .sb-lightbox:focus { outline: none; }
+
+/* ============================================================
+   READING PROGRESS BAR
+   ============================================================ */
+
+.sb-read-progress {
+  position: fixed;
+  top: 0; left: 0;
+  width: 100%;
+  height: 3px;
+  background: var(--accent);
+  z-index: 200;
+  transform: scaleX(0);
+  transform-origin: 0 50%;
+  transition: transform .12s linear;
+  pointer-events: none;
+}
+
+/* ============================================================
+   HEADING ANCHORS
+   ============================================================ */
+
+.entry-content h2, .entry-content h3 {
+  scroll-margin-top: 96px;
+  position: relative;
+}
+.sb-anchor {
+  margin-left: 10px;
+  font-family: var(--font-mono);
+  font-size: .7em;
+  color: var(--ink-3);
+  text-decoration: none;
+  opacity: 0;
+  transition: opacity .15s, color .15s;
+  vertical-align: middle;
+}
+.entry-content h2:hover .sb-anchor,
+.entry-content h3:hover .sb-anchor,
+.sb-anchor:focus-visible {
+  opacity: 1;
+  color: var(--accent);
+}
+.sb-anchor.is-copied::after {
+  content: 'copied';
+  margin-left: 6px;
+  color: var(--accent);
+  font-size: 11px;
+  letter-spacing: .04em;
+}
+
+/* ============================================================
+   HERO LIVE WEATHER STATE
+   ============================================================ */
+
+.hero-weather { transition: opacity .25s; }
+.hero-weather.is-live {
+  position: relative;
+}
+.hero-weather.is-live::before {
+  content: '';
+  display: inline-block;
+  width: 6px; height: 6px;
+  border-radius: 50%;
+  background: #22c55e;
+  margin-right: 8px;
+  vertical-align: middle;
+  box-shadow: 0 0 0 0 rgba(34,197,94,.6);
+  animation: sb-pulse-live 2.2s ease-in-out infinite;
+}
+@keyframes sb-pulse-live {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(34,197,94,.5); }
+  50%      { box-shadow: 0 0 0 6px rgba(34,197,94,0); }
+}
+
+/* ============================================================
+   TOPO PARALLAX
+   ============================================================ */
+
+.topo-bg {
+  will-change: transform;
+  transition: transform .25s cubic-bezier(.2,.6,.2,1);
+}
+
+/* ============================================================
+   SNOW EASTER EGG
+   ============================================================ */
+
+.sb-snow {
+  position: fixed;
+  inset: 0;
+  z-index: 9998;
+  pointer-events: none;
+}
+
+/* ============================================================
+   COMMAND PALETTE (⌘K / Ctrl+K)
+   ============================================================ */
+
+.sb-cmdk {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,.45);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  z-index: 10000;
+  display: none;
+  align-items: flex-start;
+  justify-content: center;
+  padding: 11vh 16px 16px;
+  animation: sb-cmdk-in .12s ease-out;
+}
+[data-mode="dark"] .sb-cmdk { background: rgba(0,0,0,.6); }
+.sb-cmdk.is-open { display: flex; }
+@keyframes sb-cmdk-in {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+.sb-cmdk-panel {
+  width: 100%;
+  max-width: 580px;
+  background: var(--paper);
+  border: 1px solid var(--line);
+  border-radius: 16px;
+  box-shadow: 0 30px 80px rgba(0,0,0,.25);
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  max-height: 70vh;
+  animation: sb-cmdk-panel-in .14s ease-out;
+}
+@keyframes sb-cmdk-panel-in {
+  from { opacity: 0; transform: translateY(-8px) scale(.99); }
+  to   { opacity: 1; transform: none; }
+}
+.sb-cmdk-input {
+  width: 100%;
+  background: transparent;
+  border: 0;
+  border-bottom: 1px solid var(--line);
+  padding: 18px 22px;
+  font-family: var(--font-body);
+  font-size: 16px;
+  color: var(--ink);
+  outline: none;
+}
+.sb-cmdk-input::placeholder { color: var(--ink-3); }
+.sb-cmdk-list {
+  overflow-y: auto;
+  padding: 8px;
+  flex: 1;
+}
+.sb-cmdk-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 10px 14px;
+  border-radius: 8px;
+  cursor: pointer;
+  color: var(--ink);
+  font-size: 14.5px;
+}
+.sb-cmdk-item.is-active {
+  background: color-mix(in oklab, var(--accent) 12%, transparent);
+  color: var(--ink);
+}
+.sb-cmdk-item.is-active .sb-cmdk-name { color: var(--accent); }
+.sb-cmdk-badge {
+  font-family: var(--font-mono);
+  font-size: 10.5px;
+  letter-spacing: .04em;
+  color: var(--ink-3);
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+.sb-cmdk-empty {
+  padding: 24px;
+  color: var(--ink-3);
+  font-family: var(--font-mono);
+  font-size: 13px;
+  text-align: center;
+}
+.sb-cmdk-hint {
+  display: flex;
+  gap: 20px;
+  padding: 10px 18px;
+  border-top: 1px solid var(--line);
+  background: var(--bg-2);
+  font-size: 11.5px;
+  color: var(--ink-3);
+  font-family: var(--font-mono);
+  letter-spacing: .03em;
+}
+.sb-cmdk-hint kbd {
+  display: inline-block;
+  background: var(--paper);
+  border: 1px solid var(--line);
+  border-bottom-width: 2px;
+  border-radius: 4px;
+  padding: 1px 6px;
+  font-family: var(--font-mono);
+  font-size: 10.5px;
+  margin: 0 2px;
+  color: var(--ink-2);
+}
+
+/* ============================================================
+   FOOTER ALTITUDE LINE
+   ============================================================ */
+
+.footer-altitude {
+  display: block;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: var(--ink-3);
+  margin: 16px var(--space-md) 0;
+  letter-spacing: .03em;
+  text-align: center;
+  padding-bottom: 24px;
+}
+.footer-altitude .wx-rotate {
+  transition: opacity .35s;
+  color: var(--ink-2);
+}
+.footer-altitude kbd {
+  display: inline-block;
+  background: var(--bg-2);
+  border: 1px solid var(--line);
+  border-bottom-width: 2px;
+  border-radius: 4px;
+  padding: 0 5px;
+  font-size: 10.5px;
+  color: var(--ink-2);
+}
+
+/* ============================================================
+   PRINT — CV / Resume
+   ============================================================ */
+
+@media print {
+  #site-header, #site-footer, .sb-read-progress, .sb-cmdk, .sb-lightbox, .sb-snow,
+  .skip-link, .nav-actions, .nav-burger, #wpadminbar,
+  .post-share, .post-nav, .post-byline .post-share,
+  .photo-filters, .blog-filters {
+    display: none !important;
+  }
+  body {
+    background: #fff !important;
+    color: #000 !important;
+    font-size: 11pt;
+    line-height: 1.45;
+  }
+  .container, .container-narrow {
+    max-width: none !important;
+    padding: 0 !important;
+  }
+  .cv-hero, .cv-section, .about-hero, .page-content, .post-hero, .now-hero, .contact-hero {
+    padding: 0 !important;
+  }
+  .cv-title {
+    font-size: 28pt !important;
+    margin: 0 0 4pt !important;
+  }
+  .cv-tagline {
+    font-size: 11pt !important;
+    margin: 0 0 14pt !important;
+    color: #444 !important;
+  }
+  .cv-section-heading {
+    font-size: 13pt !important;
+    border-bottom: 1pt solid #ccc;
+    padding-bottom: 3pt;
+    margin: 14pt 0 8pt !important;
+  }
+  .cv-section, .cv-entry, .cv-skills {
+    break-inside: avoid;
+    page-break-inside: avoid;
+  }
+  .cv-entry {
+    margin-bottom: 10pt !important;
+  }
+  .cv-entry-role  { font-weight: 600; font-size: 11pt; }
+  .cv-entry-org   { font-style: italic; color: #444 !important; }
+  .cv-entry-dates { font-family: 'Courier New', monospace; color: #555 !important; font-size: 10pt; }
+  .cv-entry-blurb { font-size: 10.5pt; margin-top: 3pt !important; }
+  .skills-chips .chip {
+    background: transparent !important;
+    border: 0.5pt solid #999 !important;
+    color: #000 !important;
+    padding: 1pt 6pt !important;
+    font-size: 9pt !important;
+  }
+  a, a:visited { color: #000 !important; text-decoration: none !important; }
+  a[href^="http"]::after,
+  a[href^="mailto:"]::after {
+    content: " <" attr(href) ">";
+    font-size: 9pt;
+    color: #555;
+    font-family: 'Courier New', monospace;
+  }
+  .entry-content { font-size: 11pt; }
+  .topo-bg, .mountain-silhouette { display: none !important; }
+  @page { margin: 0.7in; }
+}
+
+/* ============================================================
+   RESPONSIVE TWEAKS for command palette on mobile
+   ============================================================ */
+
+@media (max-width: 600px) {
+  .sb-cmdk { padding-top: 8vh; }
+  .sb-cmdk-panel { max-height: 80vh; border-radius: 12px; }
+  .sb-cmdk-hint { display: none; }
+}
