@@ -13,7 +13,7 @@ function stevebaron_customize_register( WP_Customize_Manager $wp_customize ) {
 	] );
 
 	$wp_customize->add_setting( 'sb_hero_headline', [
-		'default'           => "Hi, I'm Steve.\nMeteorologist turned\nproduct exec. Building\nat the edge of AI & media.",
+		'default'           => "Hi, I'm Steve.\nProduct, AI & digital\ntransformation executive.\nFormer SVP at Fox Corporation.",
 		'sanitize_callback' => 'wp_kses_post',
 		'transport'         => 'refresh',
 	] );
@@ -24,7 +24,7 @@ function stevebaron_customize_register( WP_Customize_Manager $wp_customize ) {
 	] );
 
 	$wp_customize->add_setting( 'sb_hero_subtext', [
-		'default'           => '25+ years from the weather desk to the executive suite. I\'ve launched apps that hit #1, built platforms reaching 100M monthly readers, and I\'m still at my best when a forecast goes sideways.',
+		'default'           => 'From driving FOX Weather to #1 on the US App Store at launch to unifying 40+ TV station sites into a national platform reaching 100M monthly uniques, I\'ve spent 15+ years turning ambiguous product, audience, and growth challenges into shipped outcomes at scale.',
 		'sanitize_callback' => 'wp_kses_post',
 		'transport'         => 'refresh',
 	] );
@@ -102,10 +102,10 @@ function stevebaron_customize_register( WP_Customize_Manager $wp_customize ) {
 	// ── Stats strip ───────────────────────────────────────────────────────────
 
 	$stats = [
-		[ 'sb_stat_1_num', 'sb_stat_1_label', '15+',  'years in product & media' ],
-		[ 'sb_stat_2_num', 'sb_stat_2_label', '#1',   'US App Store at launch' ],
-		[ 'sb_stat_3_num', 'sb_stat_3_label', '100M', 'monthly uniques reached' ],
-		[ 'sb_stat_4_num', 'sb_stat_4_label', '250K', 'FOX Weather pre-orders' ],
+		[ 'sb_stat_1_num', 'sb_stat_1_label', '#1',   'US App Store at FOX Weather launch' ],
+		[ 'sb_stat_2_num', 'sb_stat_2_label', '100M', 'monthly uniques on the Tribune platform' ],
+		[ 'sb_stat_3_num', 'sb_stat_3_label', '250K', 'FOX Weather pre-orders' ],
+		[ 'sb_stat_4_num', 'sb_stat_4_label', '150+', 'team led across product, eng & content' ],
 	];
 	foreach ( $stats as [ $num_key, $label_key, $num_def, $label_def ] ) {
 		$wp_customize->add_setting( $num_key, [ 'default' => $num_def, 'sanitize_callback' => 'sanitize_text_field' ] );
@@ -204,7 +204,7 @@ function stevebaron_customize_register( WP_Customize_Manager $wp_customize ) {
 	] );
 
 	$wp_customize->add_setting( 'sb_skills', [
-		'default'           => 'Product Strategy, AI/ML Product, Digital Media, P&L Ownership, Team Building, Figma, React, React Native, Python, SQL, WordPress, Cloudflare, Mapbox, App Store Optimization, Revenue Operations, Agile',
+		'default'           => 'Product Strategy, Artificial Intelligence (AI), Generative AI, Retrieval-Augmented Generation (RAG), Digital Transformation, Go-to-Market Strategy, Executive Leadership, App Store Optimization (ASO), SEO, Mobile Applications, OTT, Streaming Media, Live Streaming, Content Strategy, WordPress VIP, Platform Modernization, Cross-functional Team Leadership, Mergers & Acquisitions, Change Management, Board Leadership, Advisory',
 		'sanitize_callback' => 'sanitize_text_field',
 	] );
 	$wp_customize->add_control( 'sb_skills', [
@@ -214,7 +214,7 @@ function stevebaron_customize_register( WP_Customize_Manager $wp_customize ) {
 	] );
 
 	$wp_customize->add_setting( 'sb_cv_tagline', [
-		'default'           => 'Product · AI · Digital Media. Salt Lake City, UT.',
+		'default'           => 'Product, AI & Digital Transformation Executive. Salt Lake City, UT.',
 		'sanitize_callback' => 'sanitize_text_field',
 	] );
 	$wp_customize->add_control( 'sb_cv_tagline', [
@@ -241,7 +241,7 @@ function stevebaron_customize_register( WP_Customize_Manager $wp_customize ) {
 	] );
 
 	$wp_customize->add_setting( 'sb_contact_availability_text', [
-		'default'           => 'Available for advisory work, fractional executive roles, and full-time leadership opportunities in product, AI, and digital media.',
+		'default'           => 'Open to advisory, fractional, and full-time conversations. Based in Salt Lake City and comfortable working remote, hybrid, or traveling as needed.',
 		'sanitize_callback' => 'sanitize_textarea_field',
 	] );
 	$wp_customize->add_control( 'sb_contact_availability_text', [
@@ -278,7 +278,7 @@ function stevebaron_customize_register( WP_Customize_Manager $wp_customize ) {
 	] );
 
 	$wp_customize->add_setting( 'sb_footer_tagline', [
-		'default'           => 'Salt Lake City, Utah. Meteorologist turned product exec — building AI-powered media and weather tools.',
+		'default'           => 'Salt Lake City, Utah. Product, AI & digital transformation executive. Former SVP at Fox Corporation.',
 		'sanitize_callback' => 'sanitize_textarea_field',
 	] );
 	$wp_customize->add_control( 'sb_footer_tagline', [

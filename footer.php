@@ -7,7 +7,7 @@
     <div class="footer-col">
       <h4><?php bloginfo('name'); ?></h4>
       <p style="margin:0;color:var(--ink-2);max-width:320px;">
-        <?php echo esc_html(get_theme_mod('sb_footer_tagline','Salt Lake City, Utah. Meteorologist turned product exec — building AI-powered media and weather tools.')); ?>
+        <?php echo esc_html(get_theme_mod('sb_footer_tagline','Salt Lake City, Utah. Product, AI & digital transformation executive. Former SVP at Fox Corporation.')); ?>
       </p>
       <?php echo stevebaron_social_links_html(); ?>
     </div>

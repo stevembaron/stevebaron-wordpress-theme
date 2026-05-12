@@ -7,7 +7,7 @@ get_header();
 $headline   = get_theme_mod('sb_contact_headline',"Let's work together.");
 $subtext    = get_theme_mod('sb_contact_subtext','Email is best. I read everything and try to respond within a day or two — sooner if you include a weather observation.');
 $available  = get_theme_mod('sb_contact_available', true);
-$avail_text = get_theme_mod('sb_contact_availability_text','Available for advisory work, fractional executive roles, and full-time leadership opportunities in product, AI, and digital media.');
+$avail_text = get_theme_mod('sb_contact_availability_text','Open to advisory, fractional, and full-time conversations. Based in Salt Lake City and comfortable working remote, hybrid, or traveling as needed.');
 
 $cards = [
   ['Email',     'email',     'mailto:'],

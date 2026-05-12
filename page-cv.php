@@ -5,8 +5,8 @@
 get_header();
 
 $pdf_url  = get_theme_mod('sb_cv_pdf_url','');
-$tagline  = get_theme_mod('sb_cv_tagline','Product · AI · Digital Media. Salt Lake City, UT.');
-$skills   = get_theme_mod('sb_skills','Product Strategy, AI/ML Product, Digital Media, P&L Ownership, Team Building, Figma, React, React Native, Python, SQL, WordPress, Cloudflare, Mapbox, App Store Optimization, Revenue Operations, Agile');
+$tagline  = get_theme_mod('sb_cv_tagline','Product, AI & Digital Transformation Executive. Salt Lake City, UT.');
+$skills   = get_theme_mod('sb_skills','Product Strategy, Artificial Intelligence (AI), Generative AI, Retrieval-Augmented Generation (RAG), Digital Transformation, Go-to-Market Strategy, Executive Leadership, App Store Optimization (ASO), SEO, Mobile Applications, OTT, Streaming Media, Live Streaming, Content Strategy, WordPress VIP, Platform Modernization, Cross-functional Team Leadership, Mergers & Acquisitions, Change Management, Board Leadership, Advisory');
 
 $sections = ['Experience','Education','Recognition'];
 ?>

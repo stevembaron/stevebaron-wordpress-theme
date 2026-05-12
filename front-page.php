@@ -2,8 +2,8 @@
 
 <?php
 $hero_variant = get_theme_mod('sb_hero_variant','topo');
-$headline_raw = get_theme_mod('sb_hero_headline', "Hi, I'm Steve.\nMeteorologist turned\nproduct exec. Building\nat the edge of AI & media.");
-$subtext      = get_theme_mod('sb_hero_subtext','25+ years from the weather desk to the executive suite. I\'ve launched apps that hit #1, built platforms reaching 100M monthly readers, and I\'m still at my best when a forecast goes sideways.');
+$headline_raw = get_theme_mod('sb_hero_headline', "Hi, I'm Steve.\nProduct, AI & digital\ntransformation executive.\nFormer SVP at Fox Corporation.");
+$subtext      = get_theme_mod('sb_hero_subtext','From driving FOX Weather to #1 on the US App Store at launch to unifying 40+ TV station sites into a national platform reaching 100M monthly uniques, I\'ve spent 15+ years turning ambiguous product, audience, and growth challenges into shipped outcomes at scale.');
 $cta_label    = get_theme_mod('sb_hero_cta_label','Read the latest →');
 $cta_url      = get_theme_mod('sb_hero_cta_url','') ?: get_permalink(get_option('page_for_posts'));
 $cv_label     = get_theme_mod('sb_hero_cv_label','Download CV');
@@ -58,10 +58,10 @@ $headline_html = nl2br(esc_html($headline_raw));
 <!-- STATS STRIP -->
 <?php
 $stats = [
-  [ get_theme_mod('sb_stat_1_num','15+'),  get_theme_mod('sb_stat_1_label','years in product & media') ],
-  [ get_theme_mod('sb_stat_2_num','#1'),   get_theme_mod('sb_stat_2_label','US App Store at launch') ],
-  [ get_theme_mod('sb_stat_3_num','100M'), get_theme_mod('sb_stat_3_label','monthly uniques reached') ],
-  [ get_theme_mod('sb_stat_4_num','250K'), get_theme_mod('sb_stat_4_label','FOX Weather pre-orders') ],
+  [ get_theme_mod('sb_stat_1_num','#1'),   get_theme_mod('sb_stat_1_label','US App Store at FOX Weather launch') ],
+  [ get_theme_mod('sb_stat_2_num','100M'), get_theme_mod('sb_stat_2_label','monthly uniques on the Tribune platform') ],
+  [ get_theme_mod('sb_stat_3_num','250K'), get_theme_mod('sb_stat_3_label','FOX Weather pre-orders') ],
+  [ get_theme_mod('sb_stat_4_num','150+'), get_theme_mod('sb_stat_4_label','team led across product, eng & content') ],
 ];
 ?>
 <div class="stats-strip">
