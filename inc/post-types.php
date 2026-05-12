@@ -106,14 +106,14 @@ function stevebaron_register_photos() {
 }
 add_action( 'init', 'stevebaron_register_photos' );
 
-// ── Seed default CV entries on theme activation ───────────────────────────────
+// ── Seed data (resume content) ───────────────────────────────────────────────
 
-function stevebaron_seed_defaults() {
-	// Only seed once
-	if ( get_option( 'stevebaron_seeded' ) ) return;
-
-	// Default CV entries — seeded from real resume
-	$cv_entries = [
+/**
+ * Returns the canonical CV entry data — used by the activation seed and by
+ * the "Reset to resume data" admin action.
+ */
+function stevebaron_seed_cv_entries(): array {
+	return [
 		[
 			'title'  => 'Advisor / Fractional Executive',
 			'org'    => 'Various clients',
@@ -219,24 +219,13 @@ function stevebaron_seed_defaults() {
 			'order'  => 3,
 		],
 	];
+}
 
-	foreach ( $cv_entries as $entry ) {
-		$post_id = wp_insert_post( [
-			'post_title'  => $entry['title'],
-			'post_content'=> $entry['blurb'],
-			'post_type'   => 'sb_experience',
-			'post_status' => 'publish',
-			'menu_order'  => $entry['order'],
-		] );
-		if ( ! is_wp_error( $post_id ) ) {
-			update_post_meta( $post_id, '_sb_org',   $entry['org'] );
-			update_post_meta( $post_id, '_sb_dates', $entry['dates'] );
-			wp_set_object_terms( $post_id, $entry['type'], 'sb_cv_section' );
-		}
-	}
-
-	// Default projects — seeded from real work history
-	$projects = [
+/**
+ * Returns the canonical project data.
+ */
+function stevebaron_seed_projects(): array {
+	return [
 		[
 			'title'  => 'FOX Weather App',
 			'desc'   => 'Built FOX Weather from zero — product strategy, design system, engineering org, and launch. Hit #1 on the US App Store on day one. 250,000+ pre-orders before launch. Earned a Webby Award for Best News App in 2023.',
@@ -266,8 +255,33 @@ function stevebaron_seed_defaults() {
 			'order'  => 4,
 		],
 	];
+}
 
-	foreach ( $projects as $p ) {
+/**
+ * Inserts the CV entries and projects from the canonical seed data.
+ * Each post is tagged with _sb_seed = 1 so the reseed action can identify them.
+ */
+function stevebaron_insert_seed_content(): array {
+	$counts = [ 'cv' => 0, 'projects' => 0 ];
+
+	foreach ( stevebaron_seed_cv_entries() as $entry ) {
+		$post_id = wp_insert_post( [
+			'post_title'   => $entry['title'],
+			'post_content' => $entry['blurb'],
+			'post_type'    => 'sb_experience',
+			'post_status'  => 'publish',
+			'menu_order'   => $entry['order'],
+		] );
+		if ( ! is_wp_error( $post_id ) && $post_id ) {
+			update_post_meta( $post_id, '_sb_org',   $entry['org'] );
+			update_post_meta( $post_id, '_sb_dates', $entry['dates'] );
+			update_post_meta( $post_id, '_sb_seed',  '1' );
+			wp_set_object_terms( $post_id, $entry['type'], 'sb_cv_section' );
+			$counts['cv']++;
+		}
+	}
+
+	foreach ( stevebaron_seed_projects() as $p ) {
 		$post_id = wp_insert_post( [
 			'post_title'   => $p['title'],
 			'post_content' => $p['desc'],
@@ -275,12 +289,57 @@ function stevebaron_seed_defaults() {
 			'post_status'  => 'publish',
 			'menu_order'   => $p['order'],
 		] );
-		if ( ! is_wp_error( $post_id ) ) {
+		if ( ! is_wp_error( $post_id ) && $post_id ) {
 			update_post_meta( $post_id, '_sb_year',   $p['year'] );
 			update_post_meta( $post_id, '_sb_status', $p['status'] );
+			update_post_meta( $post_id, '_sb_seed',   '1' );
+			$counts['projects']++;
 		}
 	}
 
+	return $counts;
+}
+
+/**
+ * Auto-seed on theme activation (only ever runs once).
+ */
+function stevebaron_seed_defaults() {
+	if ( get_option( 'stevebaron_seeded' ) ) return;
+	stevebaron_insert_seed_content();
 	update_option( 'stevebaron_seeded', true );
 }
 add_action( 'after_switch_theme', 'stevebaron_seed_defaults' );
+
+/**
+ * Manual reset: trashes existing sb_experience + sb_project posts and
+ * re-inserts the canonical seed content. Returns a summary array.
+ * Trashed posts are recoverable from the admin Trash for ~30 days.
+ */
+function stevebaron_reseed_content(): array {
+	$trashed = [ 'cv' => 0, 'projects' => 0 ];
+
+	$existing_cv = get_posts( [
+		'post_type'      => 'sb_experience',
+		'posts_per_page' => -1,
+		'post_status'    => [ 'publish', 'draft', 'pending', 'private', 'future' ],
+		'fields'         => 'ids',
+	] );
+	foreach ( $existing_cv as $id ) {
+		if ( wp_trash_post( $id ) ) $trashed['cv']++;
+	}
+
+	$existing_projects = get_posts( [
+		'post_type'      => 'sb_project',
+		'posts_per_page' => -1,
+		'post_status'    => [ 'publish', 'draft', 'pending', 'private', 'future' ],
+		'fields'         => 'ids',
+	] );
+	foreach ( $existing_projects as $id ) {
+		if ( wp_trash_post( $id ) ) $trashed['projects']++;
+	}
+
+	$inserted = stevebaron_insert_seed_content();
+	update_option( 'stevebaron_seeded', true );
+
+	return [ 'trashed' => $trashed, 'inserted' => $inserted ];
+}

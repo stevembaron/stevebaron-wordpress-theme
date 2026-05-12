@@ -149,15 +149,28 @@ add_action( 'admin_menu', function () {
 function stevebaron_setup_admin_page() {
 	if ( ! current_user_can( 'manage_options' ) ) return;
 
-	$ran    = false;
-	$status = [];
+	$ran     = false;
+	$reseeded = false;
+	$status  = [];
+	$reseed_result = null;
+
 	if ( isset( $_POST['stevebaron_setup_nonce'] )
 		&& wp_verify_nonce( sanitize_text_field( wp_unslash( $_POST['stevebaron_setup_nonce'] ) ), 'stevebaron_setup' ) ) {
 		$status = stevebaron_run_site_setup();
 		$ran    = true;
 	}
 
+	if ( isset( $_POST['stevebaron_reseed_nonce'] )
+		&& wp_verify_nonce( sanitize_text_field( wp_unslash( $_POST['stevebaron_reseed_nonce'] ) ), 'stevebaron_reseed' ) ) {
+		$reseed_result = stevebaron_reseed_content();
+		$reseeded      = true;
+	}
+
 	$pages = stevebaron_expected_pages();
+
+	// Counts for the CV/Projects status display
+	$cv_count       = (int) wp_count_posts( 'sb_experience' )->publish;
+	$project_count  = (int) wp_count_posts( 'sb_project' )->publish;
 	?>
 	<div class="wrap">
 		<h1><?php esc_html_e( 'Site Setup', 'stevebaron' ); ?></h1>
@@ -243,6 +256,56 @@ function stevebaron_setup_admin_page() {
 		<form method="post" style="margin-top:24px;">
 			<?php wp_nonce_field( 'stevebaron_setup', 'stevebaron_setup_nonce' ); ?>
 			<?php submit_button( __( 'Run site setup', 'stevebaron' ), 'primary large' ); ?>
+		</form>
+
+		<hr style="margin:48px 0 24px;">
+
+		<h2><?php esc_html_e( 'CV & Projects content', 'stevebaron' ); ?></h2>
+		<p>
+			<?php
+			printf(
+				/* translators: 1: CV entry count, 2: project count */
+				esc_html__( 'Currently: %1$d CV entries, %2$d projects.', 'stevebaron' ),
+				(int) $cv_count,
+				(int) $project_count
+			);
+			?>
+		</p>
+
+		<?php if ( $reseeded && $reseed_result ) : ?>
+			<div class="notice notice-success">
+				<p>
+					<strong><?php esc_html_e( 'Reset complete.', 'stevebaron' ); ?></strong>
+					<?php
+					printf(
+						/* translators: 1: CV trashed count, 2: project trashed count, 3: CV inserted count, 4: project inserted count */
+						esc_html__( 'Trashed %1$d CV entries and %2$d projects, then inserted %3$d CV entries and %4$d projects from the resume.', 'stevebaron' ),
+						(int) $reseed_result['trashed']['cv'],
+						(int) $reseed_result['trashed']['projects'],
+						(int) $reseed_result['inserted']['cv'],
+						(int) $reseed_result['inserted']['projects']
+					);
+					?>
+				</p>
+				<p>
+					<a href="<?php echo esc_url( home_url( '/cv/' ) ); ?>" class="button" target="_blank"><?php esc_html_e( 'View CV page →', 'stevebaron' ); ?></a>
+					<a href="<?php echo esc_url( admin_url( 'edit.php?post_type=sb_experience&post_status=trash' ) ); ?>" class="button"><?php esc_html_e( 'View trashed entries', 'stevebaron' ); ?></a>
+				</p>
+			</div>
+		<?php endif; ?>
+
+		<div class="notice notice-warning inline" style="padding:12px 14px;">
+			<p style="margin:0;">
+				<strong><?php esc_html_e( 'Heads up:', 'stevebaron' ); ?></strong>
+				<?php esc_html_e( 'This will send all existing CV Entries and Projects to the Trash (recoverable from the admin) and recreate them from the canonical resume data shipped with the theme. Use this if the seed ran with old placeholder data.', 'stevebaron' ); ?>
+			</p>
+		</div>
+
+		<form method="post" style="margin-top:16px;" onsubmit="return confirm('<?php echo esc_js( __( "Trash all existing CV Entries and Projects, then reseed from the resume? You can restore them from the admin Trash if needed.", "stevebaron" ) ); ?>');">
+			<?php wp_nonce_field( 'stevebaron_reseed', 'stevebaron_reseed_nonce' ); ?>
+			<button type="submit" class="button button-secondary" style="color:#b32d2e;border-color:#b32d2e;">
+				<?php esc_html_e( 'Reset CV & Projects to resume data', 'stevebaron' ); ?>
+			</button>
 		</form>
 	</div>
 	<?php
