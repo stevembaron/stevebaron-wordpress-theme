@@ -13,7 +13,7 @@ function stevebaron_customize_register( WP_Customize_Manager $wp_customize ) {
 	] );
 
 	$wp_customize->add_setting( 'sb_hero_headline', [
-		'default'           => "Hi, I'm Steve.\nI make things on the\ninternet, mostly\nabout weather & media.",
+		'default'           => "Hi, I'm Steve.\nMeteorologist turned\nproduct exec. Building\nat the edge of AI & media.",
 		'sanitize_callback' => 'wp_kses_post',
 		'transport'         => 'refresh',
 	] );
@@ -24,7 +24,7 @@ function stevebaron_customize_register( WP_Customize_Manager $wp_customize ) {
 	] );
 
 	$wp_customize->add_setting( 'sb_hero_subtext', [
-		'default'           => 'Product person, longtime weather nerd, occasional skier. Currently building something at the intersection of forecasting and storytelling. Previously digital media at a place you\'ve heard of.',
+		'default'           => '25+ years from the weather desk to the executive suite. I\'ve launched apps that hit #1, built platforms reaching 100M monthly readers, and I\'m still at my best when a forecast goes sideways.',
 		'sanitize_callback' => 'wp_kses_post',
 		'transport'         => 'refresh',
 	] );
@@ -102,10 +102,10 @@ function stevebaron_customize_register( WP_Customize_Manager $wp_customize ) {
 	// ── Stats strip ───────────────────────────────────────────────────────────
 
 	$stats = [
-		[ 'sb_stat_1_num', 'sb_stat_1_label', '12y', 'in product' ],
-		[ 'sb_stat_2_num', 'sb_stat_2_label', '3',   'states lived in' ],
-		[ 'sb_stat_3_num', 'sb_stat_3_label', '140in', 'average snow on Alta' ],
-		[ 'sb_stat_4_num', 'sb_stat_4_label', '∞',   'weather charts saved' ],
+		[ 'sb_stat_1_num', 'sb_stat_1_label', '15+',  'years in product & media' ],
+		[ 'sb_stat_2_num', 'sb_stat_2_label', '#1',   'US App Store at launch' ],
+		[ 'sb_stat_3_num', 'sb_stat_3_label', '100M', 'monthly uniques reached' ],
+		[ 'sb_stat_4_num', 'sb_stat_4_label', '250K', 'FOX Weather pre-orders' ],
 	];
 	foreach ( $stats as [ $num_key, $label_key, $num_def, $label_def ] ) {
 		$wp_customize->add_setting( $num_key, [ 'default' => $num_def, 'sanitize_callback' => 'sanitize_text_field' ] );
@@ -153,8 +153,8 @@ function stevebaron_customize_register( WP_Customize_Manager $wp_customize ) {
 		'twitter'   => [ 'Twitter/X URL', 'https://twitter.com/stevebaron' ],
 		'facebook'  => [ 'Facebook URL', '' ],
 		'instagram' => [ 'Instagram URL', 'https://instagram.com/stevebaron' ],
-		'github'    => [ 'GitHub URL', 'https://github.com/stevebaron' ],
-		'email'     => [ 'Email address', 'hi@stevebaron.com' ],
+		'github'    => [ 'GitHub URL', 'https://github.com/stevembaron' ],
+		'email'     => [ 'Email address', 'steve@stevebaron.com' ],
 	];
 	foreach ( $socials as $key => [ $label, $default ] ) {
 		$wp_customize->add_setting( 'sb_social_' . $key, [
@@ -204,7 +204,7 @@ function stevebaron_customize_register( WP_Customize_Manager $wp_customize ) {
 	] );
 
 	$wp_customize->add_setting( 'sb_skills', [
-		'default'           => 'Figma, Linear, Notion, SQL, React, Python, WordPress, Cloudflare, Mapbox, Mux',
+		'default'           => 'Product Strategy, AI/ML Product, Digital Media, P&L Ownership, Team Building, Figma, React, React Native, Python, SQL, WordPress, Cloudflare, Mapbox, App Store Optimization, Revenue Operations, Agile',
 		'sanitize_callback' => 'sanitize_text_field',
 	] );
 	$wp_customize->add_control( 'sb_skills', [
@@ -214,7 +214,7 @@ function stevebaron_customize_register( WP_Customize_Manager $wp_customize ) {
 	] );
 
 	$wp_customize->add_setting( 'sb_cv_tagline', [
-		'default'           => 'Product · Digital Media · Weather. Salt Lake City, UT.',
+		'default'           => 'Product · AI · Digital Media. Salt Lake City, UT.',
 		'sanitize_callback' => 'sanitize_text_field',
 	] );
 	$wp_customize->add_control( 'sb_cv_tagline', [
@@ -241,7 +241,7 @@ function stevebaron_customize_register( WP_Customize_Manager $wp_customize ) {
 	] );
 
 	$wp_customize->add_setting( 'sb_contact_availability_text', [
-		'default'           => 'Available for advisory work, podcast guesting, and conference panels — not full-time roles.',
+		'default'           => 'Available for advisory work, fractional executive roles, and full-time leadership opportunities in product, AI, and digital media.',
 		'sanitize_callback' => 'sanitize_textarea_field',
 	] );
 	$wp_customize->add_control( 'sb_contact_availability_text', [
@@ -251,7 +251,7 @@ function stevebaron_customize_register( WP_Customize_Manager $wp_customize ) {
 	] );
 
 	$wp_customize->add_setting( 'sb_contact_headline', [
-		'default'           => "Let's talk weather, media, or skiing.",
+		'default'           => "Let's work together.",
 		'sanitize_callback' => 'sanitize_text_field',
 	] );
 	$wp_customize->add_control( 'sb_contact_headline', [
@@ -261,7 +261,7 @@ function stevebaron_customize_register( WP_Customize_Manager $wp_customize ) {
 	] );
 
 	$wp_customize->add_setting( 'sb_contact_subtext', [
-		'default'           => 'Email is best. I read everything, but I\'m slow to respond if it\'s a busy forecast week.',
+		'default'           => 'Email is best. I read everything and try to respond within a day or two — sooner if you include a weather observation.',
 		'sanitize_callback' => 'sanitize_textarea_field',
 	] );
 	$wp_customize->add_control( 'sb_contact_subtext', [
@@ -278,7 +278,7 @@ function stevebaron_customize_register( WP_Customize_Manager $wp_customize ) {
 	] );
 
 	$wp_customize->add_setting( 'sb_footer_tagline', [
-		'default'           => 'Salt Lake City, Utah. Building things on the internet, mostly about weather and media.',
+		'default'           => 'Salt Lake City, Utah. Meteorologist turned product exec — building AI-powered media and weather tools.',
 		'sanitize_callback' => 'sanitize_textarea_field',
 	] );
 	$wp_customize->add_control( 'sb_footer_tagline', [

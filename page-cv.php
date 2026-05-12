@@ -8,7 +8,7 @@ $pdf_url  = get_theme_mod('sb_cv_pdf_url','');
 $tagline  = get_theme_mod('sb_cv_tagline','Product · Digital Media · Weather. Salt Lake City, UT.');
 $skills   = get_theme_mod('sb_skills','Figma, Linear, Notion, SQL, React, Python, WordPress, Cloudflare, Mapbox, Mux');
 
-$sections = ['Experience','Education','Speaking'];
+$sections = ['Experience','Education','Recognition'];
 ?>
 
 <section class="cv-hero">
