@@ -3,12 +3,14 @@
  * Steve Baron Theme — functions.php
  */
 
-define( 'STEVEBARON_VERSION', '1.0.0' );
+define( 'STEVEBARON_VERSION', '1.0.1' );
+define( 'STEVEBARON_DIR', get_template_directory() );
+define( 'STEVEBARON_URI', get_template_directory_uri() );
 
 // ── Theme setup ──────────────────────────────────────────────────────────────
 
 function stevebaron_setup() {
-	load_theme_textdomain( 'stevebaron', get_template_directory() . '/languages' );
+	load_theme_textdomain( 'stevebaron', STEVEBARON_DIR . '/languages' );
 
 	add_theme_support( 'title-tag' );
 	add_theme_support( 'post-thumbnails' );
@@ -24,13 +26,14 @@ function stevebaron_setup() {
 	add_editor_style( 'assets/css/editor.css' );
 	add_theme_support( 'wp-block-styles' );
 	add_theme_support( 'align-wide' );
+	add_theme_support( 'responsive-embeds' );
+	add_theme_support( 'automatic-feed-links' );
 
 	register_nav_menus( [
 		'primary' => __( 'Primary Menu', 'stevebaron' ),
 		'footer'  => __( 'Footer Menu', 'stevebaron' ),
 	] );
 
-	// Image sizes
 	add_image_size( 'sb-hero',    1280, 720,  true );
 	add_image_size( 'sb-card',    800,  600,  true );
 	add_image_size( 'sb-square',  600,  600,  true );
@@ -38,10 +41,17 @@ function stevebaron_setup() {
 }
 add_action( 'after_setup_theme', 'stevebaron_setup' );
 
+// ── Asset version: filemtime when readable, fallback to theme version ────────
+
+function stevebaron_asset_version( string $relative_path ): string {
+	$abs = STEVEBARON_DIR . '/' . ltrim( $relative_path, '/' );
+	return file_exists( $abs ) ? (string) filemtime( $abs ) : STEVEBARON_VERSION;
+}
+
 // ── Enqueue scripts & styles ──────────────────────────────────────────────────
 
 function stevebaron_scripts() {
-	// Google Fonts
+	// Google Fonts (preconnect handled in header.php)
 	wp_enqueue_style(
 		'stevebaron-fonts',
 		'https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Inter+Tight:ital,wght@0,300;0,400;0,500;0,600;0,700;1,300;1,500&family=JetBrains+Mono:wght@400;500&display=swap',
@@ -51,24 +61,18 @@ function stevebaron_scripts() {
 
 	wp_enqueue_style(
 		'stevebaron-main',
-		get_template_directory_uri() . '/assets/css/main.css',
+		STEVEBARON_URI . '/assets/css/main.css',
 		[ 'stevebaron-fonts' ],
-		STEVEBARON_VERSION
+		stevebaron_asset_version( 'assets/css/main.css' )
 	);
 
 	wp_enqueue_script(
 		'stevebaron-main',
-		get_template_directory_uri() . '/assets/js/main.js',
+		STEVEBARON_URI . '/assets/js/main.js',
 		[],
-		STEVEBARON_VERSION,
-		true
+		stevebaron_asset_version( 'assets/js/main.js' ),
+		[ 'in_footer' => true, 'strategy' => 'defer' ]
 	);
-
-	// Pass theme data to JS
-	wp_localize_script( 'stevebaron-main', 'SB', [
-		'themeUri' => get_template_directory_uri(),
-		'ajaxUrl'  => admin_url( 'admin-ajax.php' ),
-	] );
 
 	if ( is_singular() && comments_open() && get_option( 'thread_comments' ) ) {
 		wp_enqueue_script( 'comment-reply' );
@@ -76,24 +80,64 @@ function stevebaron_scripts() {
 }
 add_action( 'wp_enqueue_scripts', 'stevebaron_scripts' );
 
-// ── Dynamic accent color from Customizer ─────────────────────────────────────
+// ── Inline customizer CSS + hero variant flag ────────────────────────────────
 
 function stevebaron_customizer_css() {
-	$accent     = get_theme_mod( 'sb_accent_color', '#c2410c' );
-	$accent_2   = get_theme_mod( 'sb_accent_2_color', '#7c2d12' );
-	$hero_var   = get_theme_mod( 'sb_hero_variant', 'topo' );
-	echo '<style id="sb-customizer-css">';
-	echo ':root{--accent:' . esc_attr( $accent ) . ';--accent-2:' . esc_attr( $accent_2 ) . ';}';
-	echo '</style>';
-	echo '<script>window.SB_HERO_VARIANT=' . wp_json_encode( $hero_var ) . ';</script>';
+	$accent   = sanitize_hex_color( get_theme_mod( 'sb_accent_color', '#c2410c' ) ) ?: '#c2410c';
+	$accent_2 = sanitize_hex_color( get_theme_mod( 'sb_accent_2_color', '#7c2d12' ) ) ?: '#7c2d12';
+	$hero_var = get_theme_mod( 'sb_hero_variant', 'topo' );
+	echo '<style id="sb-customizer-css">:root{--accent:' . esc_attr( $accent ) . ';--accent-2:' . esc_attr( $accent_2 ) . ';}</style>' . "\n";
+	echo '<script>window.SB_HERO_VARIANT=' . wp_json_encode( $hero_var ) . ';</script>' . "\n";
 }
 add_action( 'wp_head', 'stevebaron_customizer_css', 5 );
 
+// ── Open Graph + Twitter Card meta ───────────────────────────────────────────
+
+function stevebaron_meta_tags() {
+	if ( is_admin() ) return;
+
+	$site_name = get_bloginfo( 'name' );
+	$desc      = get_bloginfo( 'description' );
+	$url       = home_url( add_query_arg( null, null ) );
+	$image     = '';
+
+	if ( is_singular() ) {
+		global $post;
+		$desc  = has_excerpt( $post )
+			? wp_strip_all_tags( get_the_excerpt( $post ) )
+			: wp_trim_words( wp_strip_all_tags( $post->post_content ?? '' ), 30 );
+		$url   = get_permalink( $post );
+		if ( has_post_thumbnail( $post ) ) {
+			$image = get_the_post_thumbnail_url( $post, 'sb-hero' );
+		}
+	}
+	if ( ! $image && has_custom_logo() ) {
+		$logo_id = get_theme_mod( 'custom_logo' );
+		$image   = $logo_id ? wp_get_attachment_image_url( $logo_id, 'full' ) : '';
+	}
+
+	$title = wp_get_document_title();
+	echo "<meta name=\"description\" content=\"" . esc_attr( $desc ) . "\">\n";
+	echo "<meta property=\"og:type\" content=\"" . ( is_singular( 'post' ) ? 'article' : 'website' ) . "\">\n";
+	echo "<meta property=\"og:title\" content=\"" . esc_attr( $title ) . "\">\n";
+	echo "<meta property=\"og:description\" content=\"" . esc_attr( $desc ) . "\">\n";
+	echo "<meta property=\"og:url\" content=\"" . esc_url( $url ) . "\">\n";
+	echo "<meta property=\"og:site_name\" content=\"" . esc_attr( $site_name ) . "\">\n";
+	if ( $image ) echo "<meta property=\"og:image\" content=\"" . esc_url( $image ) . "\">\n";
+	echo "<meta name=\"twitter:card\" content=\"" . ( $image ? 'summary_large_image' : 'summary' ) . "\">\n";
+	$twitter = get_theme_mod( 'sb_social_twitter', '' );
+	if ( $twitter ) {
+		$handle = '@' . ltrim( basename( untrailingslashit( $twitter ) ), '@' );
+		echo "<meta name=\"twitter:site\" content=\"" . esc_attr( $handle ) . "\">\n";
+	}
+}
+add_action( 'wp_head', 'stevebaron_meta_tags', 6 );
+
 // ── Includes ──────────────────────────────────────────────────────────────────
 
-require get_template_directory() . '/inc/customizer.php';
-require get_template_directory() . '/inc/post-types.php';
-require get_template_directory() . '/inc/meta-boxes.php';
+require STEVEBARON_DIR . '/inc/customizer.php';
+require STEVEBARON_DIR . '/inc/post-types.php';
+require STEVEBARON_DIR . '/inc/meta-boxes.php';
 
 // ── Helper: reading time ──────────────────────────────────────────────────────
 
@@ -101,10 +145,11 @@ function stevebaron_reading_time( $post_id = null ) {
 	$content    = get_post_field( 'post_content', $post_id ?: get_the_ID() );
 	$word_count = str_word_count( wp_strip_all_tags( $content ) );
 	$minutes    = max( 1, (int) ceil( $word_count / 200 ) );
-	return $minutes . ' min read';
+	/* translators: %d: number of minutes */
+	return sprintf( _n( '%d min read', '%d min read', $minutes, 'stevebaron' ), $minutes );
 }
 
-// ── Helper: social icon SVG ───────────────────────────────────────────────────
+// ── Helper: social icon SVG paths ────────────────────────────────────────────
 
 function stevebaron_social_icon( string $network ): string {
 	$icons = [
@@ -135,13 +180,14 @@ function stevebaron_social_links_html( array $networks = [] ): string {
 		$url = get_theme_mod( 'sb_social_' . $net, '' );
 		if ( ! $url ) continue;
 		if ( $net === 'email' ) $url = 'mailto:' . sanitize_email( $url );
-		$icon = stevebaron_social_icon( $net );
+		$icon  = stevebaron_social_icon( $net );
 		$label = $labels[ $net ] ?? ucfirst( $net );
+		$attrs = $net !== 'email' ? ' target="_blank" rel="noopener noreferrer"' : '';
 		$out .= sprintf(
-			'<a href="%s" class="social-icon" aria-label="%s" %s><svg viewBox="0 0 24 24" width="15" height="15" fill="currentColor">%s</svg></a>',
+			'<a href="%s" class="social-icon" aria-label="%s"%s><svg viewBox="0 0 24 24" width="15" height="15" fill="currentColor" aria-hidden="true">%s</svg></a>',
 			esc_url( $url ),
 			esc_attr( $label ),
-			( $net !== 'email' ) ? 'target="_blank" rel="noopener noreferrer"' : '',
+			$attrs,
 			$icon
 		);
 	}
@@ -149,34 +195,47 @@ function stevebaron_social_links_html( array $networks = [] ): string {
 	return $out;
 }
 
-// ── Walker: clean nav menu ────────────────────────────────────────────────────
+// ── Walker: clean nav menu (with sub-menu support) ────────────────────────────
 
 class Stevebaron_Nav_Walker extends Walker_Nav_Menu {
+	public function start_lvl( &$output, $depth = 0, $args = null ) {
+		$indent  = str_repeat( "\t", $depth );
+		$output .= "\n{$indent}<ul class=\"sub-menu\">\n";
+	}
+
+	public function end_lvl( &$output, $depth = 0, $args = null ) {
+		$indent  = str_repeat( "\t", $depth );
+		$output .= "{$indent}</ul>\n";
+	}
+
 	public function start_el( &$output, $item, $depth = 0, $args = null, $id = 0 ) {
 		$classes   = empty( $item->classes ) ? [] : (array) $item->classes;
-		$is_active = in_array( 'current-menu-item', $classes ) || in_array( 'current-page-ancestor', $classes );
+		$is_active = in_array( 'current-menu-item', $classes, true ) || in_array( 'current-page-ancestor', $classes, true );
 		$url       = $item->url ?: '#';
 		$title     = apply_filters( 'the_title', $item->title, $item->ID );
+		$target    = ! empty( $item->target ) ? sprintf( ' target="%s"', esc_attr( $item->target ) ) : '';
+		$rel       = ! empty( $item->xfn )    ? sprintf( ' rel="%s"',    esc_attr( $item->xfn ) ) : '';
 		$output   .= sprintf(
-			'<a href="%s" class="%s">%s</a>',
+			'<a href="%s" class="%s"%s%s>%s</a>',
 			esc_url( $url ),
 			$is_active ? 'active' : '',
+			$target,
+			$rel,
 			esc_html( $title )
 		);
 	}
+
+	public function end_el( &$output, $item, $depth = 0, $args = null ) {
+		$output .= "\n";
+	}
 }
 
-// ── Disable emoji (lightweight theme) ────────────────────────────────────────
-
-remove_action( 'wp_head', 'print_emoji_detection_script', 7 );
-remove_action( 'wp_print_styles', 'print_emoji_styles' );
-
-// ── Excerpt length ────────────────────────────────────────────────────────────
+// ── Excerpt length / "more" ──────────────────────────────────────────────────
 
 add_filter( 'excerpt_length', fn() => 30 );
-add_filter( 'excerpt_more', fn() => '…' );
+add_filter( 'excerpt_more',   fn() => '…' );
 
-// ── Custom excerpt (auto-generated for cards) ─────────────────────────────────
+// ── Custom excerpt for cards ─────────────────────────────────────────────────
 
 function stevebaron_excerpt( int $length = 20 ): string {
 	if ( has_excerpt() ) {
@@ -184,3 +243,38 @@ function stevebaron_excerpt( int $length = 20 ): string {
 	}
 	return esc_html( wp_trim_words( get_the_content(), $length ) );
 }
+
+// ── Head cleanup: remove WP bloat ────────────────────────────────────────────
+
+remove_action( 'wp_head', 'wp_generator' );
+remove_action( 'wp_head', 'rsd_link' );
+remove_action( 'wp_head', 'wlwmanifest_link' );
+remove_action( 'wp_head', 'wp_shortlink_wp_head' );
+remove_action( 'wp_head', 'print_emoji_detection_script', 7 );
+remove_action( 'wp_print_styles', 'print_emoji_styles' );
+remove_action( 'admin_print_scripts', 'print_emoji_detection_script' );
+remove_action( 'admin_print_styles', 'print_emoji_styles' );
+remove_filter( 'the_content_feed', 'wp_staticize_emoji' );
+remove_filter( 'comment_text_rss',  'wp_staticize_emoji' );
+remove_filter( 'wp_mail',           'wp_staticize_emoji_for_email' );
+
+// Strip ?ver= from src URLs by removing version query (kept for cache busting via path query)
+add_filter( 'the_generator', '__return_empty_string' );
+
+// ── Default image attrs: lazy + async decode (WP already adds loading=lazy
+//    for in-content images; this extends to the_post_thumbnail) ──────────────
+
+function stevebaron_thumbnail_attrs( $attr ) {
+	if ( ! isset( $attr['loading'] ) )  $attr['loading']  = 'lazy';
+	if ( ! isset( $attr['decoding'] ) ) $attr['decoding'] = 'async';
+	return $attr;
+}
+add_filter( 'wp_get_attachment_image_attributes', 'stevebaron_thumbnail_attrs' );
+
+// ── Skip-link focus fix is handled in CSS; a11y body class ───────────────────
+
+function stevebaron_body_class( $classes ) {
+	if ( is_singular() && has_post_thumbnail() ) $classes[] = 'has-featured-image';
+	return $classes;
+}
+add_filter( 'body_class', 'stevebaron_body_class' );

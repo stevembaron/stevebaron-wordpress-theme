@@ -2,8 +2,8 @@
 
 <?php
 $hero_variant = get_theme_mod('sb_hero_variant','topo');
-$headline_raw = get_theme_mod('sb_hero_headline', "Hi, I'm Steve.\nI make things on the\ninternet, mostly\nabout weather & media.");
-$subtext      = get_theme_mod('sb_hero_subtext','Product person, longtime weather nerd, occasional skier. Currently building something at the intersection of forecasting and storytelling. Previously digital media at a place you\'ve heard of.');
+$headline_raw = get_theme_mod('sb_hero_headline', "Hi, I'm Steve.\nMeteorologist turned\nproduct exec. Building\nat the edge of AI & media.");
+$subtext      = get_theme_mod('sb_hero_subtext','25+ years from the weather desk to the executive suite. I\'ve launched apps that hit #1, built platforms reaching 100M monthly readers, and I\'m still at my best when a forecast goes sideways.');
 $cta_label    = get_theme_mod('sb_hero_cta_label','Read the latest →');
 $cta_url      = get_theme_mod('sb_hero_cta_url','') ?: get_permalink(get_option('page_for_posts'));
 $cv_label     = get_theme_mod('sb_hero_cv_label','Download CV');
@@ -11,10 +11,7 @@ $cv_url       = get_theme_mod('sb_cv_pdf_url','');
 $weather_text = get_theme_mod('sb_hero_weather','☀ 64°F · clear skies over the Wasatch');
 $eyebrow_text = get_theme_mod('sb_hero_eyebrow','Salt Lake City · 40.76° N');
 
-// Format headline: convert newlines to <br>
 $headline_html = nl2br(esc_html($headline_raw));
-// Italicise "internet" for the accent
-$headline_html = preg_replace('/internet/i', '<em>internet</em>', $headline_html, 1);
 ?>
 
 <!-- HERO -->
@@ -61,10 +58,10 @@ $headline_html = preg_replace('/internet/i', '<em>internet</em>', $headline_html
 <!-- STATS STRIP -->
 <?php
 $stats = [
-  [get_theme_mod('sb_stat_1_num','12y'),    get_theme_mod('sb_stat_1_label','in product')],
-  [get_theme_mod('sb_stat_2_num','3'),       get_theme_mod('sb_stat_2_label','states lived in')],
-  [get_theme_mod('sb_stat_3_num','140in'),   get_theme_mod('sb_stat_3_label','average snow on Alta')],
-  [get_theme_mod('sb_stat_4_num','∞'),       get_theme_mod('sb_stat_4_label','weather charts saved')],
+  [ get_theme_mod('sb_stat_1_num','15+'),  get_theme_mod('sb_stat_1_label','years in product & media') ],
+  [ get_theme_mod('sb_stat_2_num','#1'),   get_theme_mod('sb_stat_2_label','US App Store at launch') ],
+  [ get_theme_mod('sb_stat_3_num','100M'), get_theme_mod('sb_stat_3_label','monthly uniques reached') ],
+  [ get_theme_mod('sb_stat_4_num','250K'), get_theme_mod('sb_stat_4_label','FOX Weather pre-orders') ],
 ];
 ?>
 <div class="stats-strip">

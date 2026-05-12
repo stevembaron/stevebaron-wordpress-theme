@@ -38,7 +38,11 @@ $tags     = get_the_tags();
         <?php endif; ?>
       </div>
       <div class="post-share">
-        <button class="btn" style="font-size:12px;padding:6px 12px;" onclick="navigator.share ? navigator.share({title:document.title,url:location.href}) : navigator.clipboard.writeText(location.href).then(()=>alert('Link copied!'))" >
+        <button type="button" class="btn js-share"
+                style="font-size:12px;padding:6px 12px;"
+                data-share-title="<?php echo esc_attr(get_the_title()); ?>"
+                data-share-url="<?php echo esc_url(get_permalink()); ?>"
+                data-copied="<?php esc_attr_e('Copied!','stevebaron'); ?>">
           <?php _e('Share','stevebaron'); ?>
         </button>
       </div>

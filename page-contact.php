@@ -4,10 +4,10 @@
  */
 get_header();
 
-$headline   = get_theme_mod('sb_contact_headline',"Let's talk weather, media, or skiing.");
-$subtext    = get_theme_mod('sb_contact_subtext','Email is best. I read everything, but I\'m slow to respond if it\'s a busy forecast week.');
-$available  = get_theme_mod('sb_contact_available','1');
-$avail_text = get_theme_mod('sb_contact_availability_text','Available for advisory work, podcast guesting, and conference panels — not full-time roles.');
+$headline   = get_theme_mod('sb_contact_headline',"Let's work together.");
+$subtext    = get_theme_mod('sb_contact_subtext','Email is best. I read everything and try to respond within a day or two — sooner if you include a weather observation.');
+$available  = get_theme_mod('sb_contact_available', true);
+$avail_text = get_theme_mod('sb_contact_availability_text','Available for advisory work, fractional executive roles, and full-time leadership opportunities in product, AI, and digital media.');
 
 $cards = [
   ['Email',     'email',     'mailto:'],

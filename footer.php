@@ -7,7 +7,7 @@
     <div class="footer-col">
       <h4><?php bloginfo('name'); ?></h4>
       <p style="margin:0;color:var(--ink-2);max-width:320px;">
-        <?php echo esc_html(get_theme_mod('sb_footer_tagline','Salt Lake City, Utah. Building things on the internet, mostly about weather and media.')); ?>
+        <?php echo esc_html(get_theme_mod('sb_footer_tagline','Salt Lake City, Utah. Meteorologist turned product exec — building AI-powered media and weather tools.')); ?>
       </p>
       <?php echo stevebaron_social_links_html(); ?>
     </div>
@@ -52,8 +52,11 @@
 
   <div class="footer-bottom">
     <span>
-      &copy; <?php echo date('Y'); ?> <?php bloginfo('name'); ?> &middot;
-      <?php printf(wp_kses(__('Built with <a href="%s">WordPress</a> &amp; love','stevebaron'), ['a'=>['href'=>[]]]), 'https://wordpress.org'); ?>
+      &copy; <?php echo esc_html(wp_date('Y')); ?> <?php bloginfo('name'); ?> &middot;
+      <?php printf(
+        wp_kses(__('Built with <a href="%s">WordPress</a> &amp; love','stevebaron'), ['a'=>['href'=>true,'rel'=>true]]),
+        'https://wordpress.org'
+      ); ?>
     </span>
     <span><?php echo esc_html(get_theme_mod('sb_footer_coordinates','40.7608° N · 111.8910° W')); ?></span>
   </div>

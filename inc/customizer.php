@@ -231,8 +231,8 @@ function stevebaron_customize_register( WP_Customize_Manager $wp_customize ) {
 	] );
 
 	$wp_customize->add_setting( 'sb_contact_available', [
-		'default'           => '1',
-		'sanitize_callback' => 'sanitize_text_field',
+		'default'           => true,
+		'sanitize_callback' => function( $v ) { return ! empty( $v ); },
 	] );
 	$wp_customize->add_control( 'sb_contact_available', [
 		'label'   => __( 'Show "available" indicator', 'stevebaron' ),

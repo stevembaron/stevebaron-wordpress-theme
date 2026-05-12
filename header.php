@@ -3,13 +3,16 @@
 <head>
 <meta charset="<?php bloginfo('charset'); ?>">
 <meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#fdfcfa" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#14110d" media="(prefers-color-scheme: dark)">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<?php wp_head(); ?>
 <script>
-/* Apply saved dark mode before first paint to avoid flash */
-(function(){var m=localStorage.getItem('sb-mode');if(m)document.documentElement.setAttribute('data-mode',m);})();
+/* Apply saved dark mode before first paint to avoid flash. Runs in <head>
+   pre-CSS so the inline script must stay tiny and synchronous. */
+(function(){try{var m=localStorage.getItem('sb-mode');if(m==='dark'||m==='light')document.documentElement.setAttribute('data-mode',m);}catch(e){}})();
 </script>
+<?php wp_head(); ?>
 </head>
 <body <?php body_class(); ?>>
 <?php wp_body_open(); ?>
@@ -42,7 +45,7 @@
           'fallback_cb'    => false,
         ]);
       } else {
-        /* Fallback hard-coded links */
+        /* Fallback hard-coded links — used when no menu is set in Appearance › Menus */
         $pages = [
           'Home'     => home_url('/'),
           'About'    => home_url('/about/'),
@@ -53,8 +56,14 @@
           'Now'      => home_url('/now/'),
           'Contact'  => home_url('/contact/'),
         ];
+        $current = isset($_SERVER['REQUEST_URI'])
+          ? untrailingslashit(strtok(esc_url_raw(wp_unslash($_SERVER['REQUEST_URI'])), '?'))
+          : '';
         foreach ($pages as $label => $url) {
-          $active = (untrailingslashit($_SERVER['REQUEST_URI']) === parse_url($url, PHP_URL_PATH)) ? 'active' : '';
+          $path   = untrailingslashit((string) wp_parse_url($url, PHP_URL_PATH));
+          $active = ($path !== '' && $path === $current) || ($path === '' && in_array($current, ['', '/'], true))
+            ? 'active'
+            : '';
           printf('<a href="%s" class="%s">%s</a>', esc_url($url), esc_attr($active), esc_html($label));
         }
       }

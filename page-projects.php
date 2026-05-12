@@ -35,7 +35,7 @@ get_header();
         $status_class = 'status-' . strtolower($status);
     ?>
       <div class="project-list-item">
-        <div class="project-num">0<?php echo $i++; ?></div>
+        <div class="project-num"><?php echo esc_html(sprintf('%02d', $i++)); ?></div>
         <div>
           <div class="project-info-row">
             <h2><?php the_title(); ?></h2>

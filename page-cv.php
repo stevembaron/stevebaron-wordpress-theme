@@ -5,8 +5,8 @@
 get_header();
 
 $pdf_url  = get_theme_mod('sb_cv_pdf_url','');
-$tagline  = get_theme_mod('sb_cv_tagline','Product · Digital Media · Weather. Salt Lake City, UT.');
-$skills   = get_theme_mod('sb_skills','Figma, Linear, Notion, SQL, React, Python, WordPress, Cloudflare, Mapbox, Mux');
+$tagline  = get_theme_mod('sb_cv_tagline','Product · AI · Digital Media. Salt Lake City, UT.');
+$skills   = get_theme_mod('sb_skills','Product Strategy, AI/ML Product, Digital Media, P&L Ownership, Team Building, Figma, React, React Native, Python, SQL, WordPress, Cloudflare, Mapbox, App Store Optimization, Revenue Operations, Agile');
 
 $sections = ['Experience','Education','Recognition'];
 ?>

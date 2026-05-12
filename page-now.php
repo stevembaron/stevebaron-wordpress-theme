@@ -22,7 +22,7 @@ $items = [
 <section class="now-hero">
   <div class="container-narrow">
     <span class="eyebrow">/now</span>
-    <h1 class="now-hero h1"><?php the_title(); ?></h1>
+    <h1 class="now-title"><?php the_title(); ?></h1>
     <p class="now-updated mono muted">
       <?php printf(
         esc_html__('Last updated: %1$s · %2$s','stevebaron'),
@@ -41,9 +41,9 @@ $items = [
       <?php endforeach; ?>
     </div>
 
-    <?php if (have_posts()) : the_post(); $content = get_the_content(); if ($content) : ?>
+    <?php if (have_posts()) : the_post(); if (get_the_content()) : ?>
       <div class="entry-content" style="margin-top:var(--space-lg);">
-        <?php echo apply_filters('the_content', $content); ?>
+        <?php the_content(); ?>
       </div>
     <?php endif; endif; ?>
 
