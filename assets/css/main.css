@@ -1503,3 +1503,342 @@ img { max-width: 100%; height: auto; display: block; }
   .sb-cmdk-panel { max-height: 80vh; border-radius: 12px; }
   .sb-cmdk-hint { display: none; }
 }
+
+/* ============================================================
+   CROSS-DOCUMENT VIEW TRANSITIONS (Chrome 126+, Safari 18+)
+   ============================================================ */
+
+@view-transition { navigation: auto; }
+::view-transition-old(root),
+::view-transition-new(root) {
+  animation-duration: .28s;
+  animation-timing-function: cubic-bezier(.2,.6,.2,1);
+}
+@media (prefers-reduced-motion: reduce) {
+  ::view-transition-old(root),
+  ::view-transition-new(root) { animation-duration: .001s; }
+}
+
+/* ============================================================
+   CUSTOM SELECTION
+   ============================================================ */
+
+::selection {
+  background: color-mix(in oklab, var(--accent) 35%, transparent);
+  color: var(--ink);
+  text-shadow: none;
+}
+
+/* ============================================================
+   BLOCKQUOTE GLOW-UP (post body)
+   ============================================================ */
+
+.entry-content blockquote {
+  border-left: 3px solid var(--accent);
+  padding: 14px 24px;
+  font-style: italic;
+  font-size: 22px;
+  line-height: 1.45;
+  color: var(--ink-2);
+  margin: 36px 0;
+  position: relative;
+}
+.entry-content blockquote::before {
+  content: '\201C';
+  position: absolute;
+  top: -22px;
+  left: -6px;
+  font-family: Georgia, 'Times New Roman', serif;
+  font-style: normal;
+  font-size: 84px;
+  line-height: 1;
+  color: var(--accent);
+  opacity: .22;
+  pointer-events: none;
+}
+.entry-content blockquote p:last-child { margin-bottom: 0; }
+.entry-content blockquote cite,
+.entry-content blockquote footer {
+  display: block;
+  font-style: normal;
+  font-family: var(--font-mono);
+  font-size: 12px;
+  color: var(--ink-3);
+  margin-top: 12px;
+  letter-spacing: .04em;
+}
+
+/* ============================================================
+   READING MODE (posts) — toggled with R key or the floating button
+   ============================================================ */
+
+.sb-reading-toggle {
+  position: fixed;
+  bottom: 22px;
+  right: 22px;
+  z-index: 90;
+  background: var(--paper);
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  padding: 9px 16px;
+  font-family: var(--font-mono);
+  font-size: 12px;
+  color: var(--ink-2);
+  cursor: pointer;
+  box-shadow: 0 4px 14px rgba(0,0,0,.08);
+  transition: background .15s, color .15s, transform .15s;
+}
+.sb-reading-toggle:hover {
+  background: var(--accent);
+  color: #fff;
+  border-color: var(--accent);
+  transform: translateY(-1px);
+}
+
+body.sb-reading #site-header,
+body.sb-reading #site-footer,
+body.sb-reading .post-nav,
+body.sb-reading .post-share,
+body.sb-reading .post-byline .post-share,
+body.sb-reading .footer-altitude,
+body.sb-reading .post-eyebrow,
+body.sb-reading .comments-area {
+  display: none !important;
+}
+body.sb-reading .post-hero { padding-top: var(--space-md); }
+body.sb-reading .container-narrow { max-width: 640px; }
+body.sb-reading .entry-content { font-size: 19px; line-height: 1.85; }
+body.sb-reading { background: var(--bg-2); }
+body.sb-reading .post-title { font-size: clamp(36px, 5vw, 52px); }
+
+/* ============================================================
+   ? KEYBOARD SHORTCUTS HELP MODAL
+   ============================================================ */
+
+.sb-help {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,.45);
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+  z-index: 10000;
+  display: none;
+  align-items: center;
+  justify-content: center;
+  padding: 16px;
+}
+[data-mode="dark"] .sb-help { background: rgba(0,0,0,.65); }
+.sb-help.is-open { display: flex; animation: sb-fade-in .15s ease-out; }
+.sb-help-panel {
+  background: var(--paper);
+  border: 1px solid var(--line);
+  border-radius: 16px;
+  padding: 28px 32px;
+  width: 100%;
+  max-width: 520px;
+  box-shadow: 0 30px 80px rgba(0,0,0,.25);
+}
+.sb-help-panel header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 18px;
+}
+.sb-help-panel header h2 {
+  font-size: 18px;
+  margin: 0;
+}
+.sb-help-close {
+  background: none;
+  border: 0;
+  cursor: pointer;
+  font-size: 18px;
+  color: var(--ink-3);
+  padding: 4px 8px;
+  line-height: 1;
+}
+.sb-help-close:hover { color: var(--accent); }
+.sb-help-panel dl {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 14px 24px;
+  margin: 0 0 20px;
+}
+.sb-help-panel dt {
+  display: flex;
+  gap: 4px;
+  align-items: center;
+  flex-wrap: wrap;
+  font-family: var(--font-mono);
+  font-size: 11.5px;
+  color: var(--ink-2);
+}
+.sb-help-panel dd {
+  margin: 0;
+  font-size: 14px;
+  color: var(--ink);
+  align-self: center;
+}
+.sb-help-panel kbd {
+  display: inline-block;
+  background: var(--bg-2);
+  border: 1px solid var(--line);
+  border-bottom-width: 2px;
+  border-radius: 4px;
+  padding: 1px 6px;
+  font-family: var(--font-mono);
+  font-size: 10.5px;
+  color: var(--ink-2);
+}
+.sb-help-panel .sep { color: var(--ink-3); margin: 0 4px; }
+.sb-help-panel footer {
+  border-top: 1px solid var(--line);
+  padding-top: 14px;
+  font-size: 12.5px;
+  color: var(--ink-3);
+}
+
+/* ============================================================
+   TOAST
+   ============================================================ */
+
+.sb-toast {
+  position: fixed;
+  bottom: 22px;
+  left: 50%;
+  transform: translate(-50%, 16px);
+  background: var(--ink);
+  color: var(--bg);
+  padding: 12px 22px;
+  border-radius: 999px;
+  font-family: var(--font-mono);
+  font-size: 12px;
+  letter-spacing: .03em;
+  z-index: 10001;
+  opacity: 0;
+  transition: opacity .25s, transform .25s cubic-bezier(.2,.6,.2,1);
+  box-shadow: 0 10px 30px rgba(0,0,0,.25);
+  max-width: 90vw;
+  text-align: center;
+}
+.sb-toast.is-in {
+  opacity: 1;
+  transform: translate(-50%, 0);
+}
+
+/* ============================================================
+   404 PAGE — forecast theme
+   ============================================================ */
+
+.error-page { display: block; padding: var(--space-xl) 0; min-height: 60vh; }
+.error-content { max-width: 580px; }
+.error-forecast {
+  background: var(--bg-2);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  padding: 20px 24px;
+  margin: var(--space-md) 0;
+  font-family: var(--font-mono);
+  font-size: 13px;
+}
+.error-forecast-row {
+  display: grid;
+  grid-template-columns: 200px 1fr;
+  gap: 12px;
+  padding: 7px 0;
+  border-bottom: 1px dashed var(--line);
+}
+.error-forecast-row:last-child { border-bottom: 0; }
+.error-forecast-key {
+  color: var(--ink-3);
+  text-transform: uppercase;
+  font-size: 11px;
+  letter-spacing: .06em;
+}
+.error-forecast-val { color: var(--ink); }
+@media (max-width: 600px) {
+  .error-forecast-row { grid-template-columns: 1fr; gap: 2px; }
+}
+
+/* ============================================================
+   FROM-THE-ARCHIVES BLOCK on home
+   ============================================================ */
+
+.home-archives {
+  padding: var(--space-lg) 0 var(--space-xl);
+}
+.archives-card {
+  display: block;
+  background: var(--bg-2);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-lg);
+  padding: 28px 32px;
+  text-decoration: none;
+  color: var(--ink);
+  transition: transform .25s cubic-bezier(.2,.6,.2,1), border-color .2s, background .2s;
+  position: relative;
+  overflow: hidden;
+}
+.archives-card:hover {
+  transform: translateY(-2px);
+  border-color: color-mix(in oklab, var(--accent) 40%, var(--line));
+}
+.archives-card::after {
+  content: 'archive';
+  position: absolute;
+  top: 14px;
+  right: 18px;
+  font-family: var(--font-mono);
+  font-size: 10.5px;
+  letter-spacing: .12em;
+  text-transform: uppercase;
+  color: var(--ink-3);
+  opacity: .5;
+}
+.archives-meta {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 10px;
+  font-size: 12px;
+}
+.archives-title {
+  font-size: 26px;
+  margin: 0 0 10px;
+}
+.archives-blurb {
+  color: var(--ink-2);
+  font-size: 15px;
+  margin: 0 0 14px;
+}
+.archives-cue {
+  font-size: 12px;
+  color: var(--accent);
+  letter-spacing: .04em;
+}
+
+/* ============================================================
+   HERO SMART-GREETING SPAN
+   ============================================================ */
+
+.sb-greeting {
+  color: var(--accent);
+  font-weight: 500;
+}
+.sb-greeting:empty { display: none; }
+
+/* ============================================================
+   WEATHER GEEK MODE (5x SB brand click)
+   ============================================================ */
+
+body.sb-weather-geek {
+  cursor: crosshair;
+}
+body.sb-weather-geek .nav-brand-mark {
+  animation: sb-wxgeek 1.6s ease-in-out infinite;
+}
+@keyframes sb-wxgeek {
+  0%, 100% { transform: rotate(-3deg); }
+  50%      { transform: rotate(3deg); }
+}
+body.sb-weather-geek a:hover { text-decoration: underline wavy var(--accent); }

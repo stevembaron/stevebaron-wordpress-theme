@@ -587,7 +587,7 @@
       update();
     }
 
-    // New goodies
+    // v1.1 goodies
     loadLiveWeather();
     initReadingProgress();
     initStatsCounters();
@@ -596,7 +596,193 @@
     initCommandPalette();
     initWxRotator();
     maybeSnowfall();
+
+    // v1.2 goodies
+    initSmartGreeting();
+    initPostImageZoom();
+    initReadingMode();
+    initShortcutsHelp();
+    initKonami();
+    initBrandEasterEgg();
+    init404Random();
   });
+
+  // ── Smart time-of-day greeting (eyebrow on home) ─────────────────────────
+
+  function initSmartGreeting() {
+    var el = document.querySelector('[data-greeting]');
+    if (!el) return;
+    var h = new Date().getHours();
+    var greeting;
+    if (h < 5)       greeting = 'A late one — ';
+    else if (h < 12) greeting = 'Good morning · ';
+    else if (h < 17) greeting = 'Good afternoon · ';
+    else if (h < 22) greeting = 'Good evening · ';
+    else             greeting = 'Up late · ';
+    el.textContent = greeting;
+  }
+
+  // ── Image zoom on post body images (medium-style) ────────────────────────
+
+  function initPostImageZoom() {
+    var content = document.querySelector('.post-hero .entry-content, .page-content .entry-content');
+    if (!content) return;
+    content.querySelectorAll('img').forEach(function (img) {
+      if (img.closest('a')) return; // don't hijack linked images
+      img.style.cursor = 'zoom-in';
+      img.addEventListener('click', function () { openLightbox(img); });
+    });
+  }
+
+  // ── Reading mode (posts only) — press R to toggle ────────────────────────
+
+  function initReadingMode() {
+    if (!document.querySelector('.post-hero')) return;
+
+    function toggle() {
+      var on = document.body.classList.toggle('sb-reading');
+      try { sessionStorage.setItem('sb-reading', on ? '1' : '0'); } catch (e) {}
+      ensureToggleBtn();
+    }
+
+    function ensureToggleBtn() {
+      var existing = document.querySelector('.sb-reading-toggle');
+      if (existing) {
+        existing.textContent = document.body.classList.contains('sb-reading') ? '✕ Exit reading mode' : '☕ Reading mode';
+        return;
+      }
+      var btn = document.createElement('button');
+      btn.type = 'button';
+      btn.className = 'sb-reading-toggle';
+      btn.title = 'Reading mode (R)';
+      btn.textContent = document.body.classList.contains('sb-reading') ? '✕ Exit reading mode' : '☕ Reading mode';
+      btn.addEventListener('click', toggle);
+      document.body.appendChild(btn);
+    }
+
+    // Restore from session
+    try {
+      if (sessionStorage.getItem('sb-reading') === '1') document.body.classList.add('sb-reading');
+    } catch (e) {}
+    ensureToggleBtn();
+
+    document.addEventListener('keydown', function (e) {
+      if (/^(input|textarea|select)$/i.test(e.target.tagName || '') || e.target.isContentEditable) return;
+      if (e.metaKey || e.ctrlKey || e.altKey) return;
+      if (e.key === 'r' || e.key === 'R') { e.preventDefault(); toggle(); }
+    });
+  }
+
+  // ── Keyboard shortcuts help modal — press ? to open ──────────────────────
+
+  function initShortcutsHelp() {
+    var dialog = null;
+    function build() {
+      dialog = document.createElement('div');
+      dialog.className = 'sb-help';
+      dialog.innerHTML =
+        '<div class="sb-help-panel" role="dialog" aria-modal="true" aria-label="Keyboard shortcuts">' +
+          '<header><h2>Keyboard shortcuts</h2><button type="button" class="sb-help-close" aria-label="Close">✕</button></header>' +
+          '<dl>' +
+            '<dt><kbd>⌘</kbd><kbd>K</kbd> <span class="sep">/</span> <kbd>Ctrl</kbd><kbd>K</kbd></dt><dd>Open the command palette</dd>' +
+            '<dt><kbd>/</kbd></dt><dd>Also opens the command palette</dd>' +
+            '<dt><kbd>R</kbd></dt><dd>Toggle reading mode on a post</dd>' +
+            '<dt><kbd>?</kbd></dt><dd>This help panel</dd>' +
+            '<dt><kbd>Esc</kbd></dt><dd>Close any overlay</dd>' +
+            '<dt><kbd>↑</kbd><kbd>↑</kbd><kbd>↓</kbd><kbd>↓</kbd><kbd>←</kbd><kbd>→</kbd><kbd>←</kbd><kbd>→</kbd><kbd>B</kbd><kbd>A</kbd></dt><dd>Try it</dd>' +
+          '</dl>' +
+          '<footer><span class="muted">Click the SB mark in the nav five times for a surprise.</span></footer>' +
+        '</div>';
+      dialog.addEventListener('click', function (e) {
+        if (e.target === dialog || e.target.classList.contains('sb-help-close')) close();
+      });
+      document.body.appendChild(dialog);
+    }
+    function open() {
+      if (!dialog) build();
+      dialog.classList.add('is-open');
+      document.body.style.overflow = 'hidden';
+    }
+    function close() {
+      if (!dialog) return;
+      dialog.classList.remove('is-open');
+      document.body.style.overflow = '';
+    }
+    document.addEventListener('keydown', function (e) {
+      if (/^(input|textarea|select)$/i.test(e.target.tagName || '') || e.target.isContentEditable) return;
+      if (e.key === '?' || (e.shiftKey && e.key === '/')) { e.preventDefault(); open(); }
+      else if (e.key === 'Escape' && dialog && dialog.classList.contains('is-open')) { close(); }
+    });
+  }
+
+  // ── Konami code → snow that lasts until refresh ──────────────────────────
+
+  function initKonami() {
+    var code = ['ArrowUp','ArrowUp','ArrowDown','ArrowDown','ArrowLeft','ArrowRight','ArrowLeft','ArrowRight','KeyB','KeyA'];
+    var pos = 0;
+    document.addEventListener('keydown', function (e) {
+      if (e.code === code[pos]) {
+        pos++;
+        if (pos === code.length) {
+          pos = 0;
+          showAlert('❄ KONAMI · Eternal snowfall engaged. Refresh to thaw.', 5500);
+          snowed = false;
+          runSnow(60 * 60 * 1000); // up to an hour
+        }
+      } else {
+        // Allow restart from beginning if the wrong key happened to be the first key
+        pos = (e.code === code[0]) ? 1 : 0;
+      }
+    });
+  }
+
+  // ── Brand mark 5x click → Weather Geek Mode toast ────────────────────────
+
+  function initBrandEasterEgg() {
+    var brand = document.querySelector('.nav-brand-mark') || document.querySelector('.nav-brand');
+    if (!brand) return;
+    var clicks = 0, first = 0;
+    brand.addEventListener('click', function (e) {
+      var now = Date.now();
+      if (now - first > 2500) { clicks = 0; first = now; }
+      clicks++;
+      if (clicks >= 5) {
+        clicks = 0;
+        e.preventDefault();
+        document.body.classList.toggle('sb-weather-geek');
+        var on = document.body.classList.contains('sb-weather-geek');
+        showAlert(on
+          ? '⛈ SEVERE WEATHER GEEK MODE: ACTIVATED. Every cursor is now slightly more meteorological.'
+          : 'Weather geek mode disengaged. Calm returning to all surfaces.', 4500);
+      }
+    });
+  }
+
+  // ── 404 page "Take me somewhere" random button ───────────────────────────
+
+  function init404Random() {
+    var btn = document.querySelector('.js-random-page');
+    if (!btn) return;
+    btn.addEventListener('click', function () {
+      var slugs = ['cv','about','projects','photos','now','contact','writing'];
+      var home  = btn.dataset.home || HOME;
+      location.href = home + slugs[Math.floor(Math.random() * slugs.length)] + '/';
+    });
+  }
+
+  // ── Tiny toast / alert ───────────────────────────────────────────────────
+
+  function showAlert(text, durationMs) {
+    var t = document.createElement('div');
+    t.className = 'sb-toast';
+    t.textContent = text;
+    document.body.appendChild(t);
+    requestAnimationFrame(function () { t.classList.add('is-in'); });
+    setTimeout(function () {
+      t.classList.remove('is-in');
+      setTimeout(function () { t.remove(); }, 400);
+    }, durationMs || 4000);
+  }
 
   // ── Topo SVG helper ──────────────────────────────────────────────────────
 

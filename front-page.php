@@ -30,7 +30,9 @@ $headline_html = nl2br(esc_html($headline_raw));
 
   <div class="container hero-content">
     <?php if ($eyebrow_text) : ?>
-      <span class="eyebrow" style="margin-bottom:24px;display:inline-flex;"><?php echo esc_html($eyebrow_text); ?></span>
+      <span class="eyebrow hero-eyebrow" style="margin-bottom:24px;display:inline-flex;">
+        <span class="sb-greeting" data-greeting></span><span class="sb-eyebrow-text"><?php echo esc_html($eyebrow_text); ?></span>
+      </span>
     <?php endif; ?>
 
     <h1 class="hero-headline"><?php echo $headline_html; ?></h1>
@@ -149,5 +151,35 @@ $stats = [
     <?php endif; wp_reset_postdata(); ?>
   </div>
 </section>
+
+<!-- FROM THE ARCHIVES -->
+<?php
+$archive_q = new WP_Query([
+  'post_type'           => 'post',
+  'posts_per_page'      => 1,
+  'orderby'             => 'rand',
+  'ignore_sticky_posts' => 1,
+  'date_query'          => [[ 'before' => '60 days ago' ]],
+]);
+if ($archive_q->have_posts()) : while ($archive_q->have_posts()) : $archive_q->the_post();
+$age = human_time_diff(get_the_time('U'), current_time('timestamp'));
+?>
+<section class="home-archives">
+  <div class="container-narrow">
+    <span class="eyebrow"><?php _e('From the archives','stevebaron'); ?></span>
+    <a href="<?php the_permalink(); ?>" class="archives-card">
+      <div class="archives-meta">
+        <?php $cats = get_the_category(); if ($cats) : ?>
+          <span class="chip"><?php echo esc_html($cats[0]->name); ?></span>
+        <?php endif; ?>
+        <span class="mono muted"><?php printf(esc_html__('%s ago · %s','stevebaron'), $age, get_the_date()); ?></span>
+      </div>
+      <h3 class="archives-title"><?php the_title(); ?></h3>
+      <p class="archives-blurb"><?php echo stevebaron_excerpt(28); ?></p>
+      <span class="archives-cue mono"><?php _e('continue reading →','stevebaron'); ?></span>
+    </a>
+  </div>
+</section>
+<?php endwhile; wp_reset_postdata(); endif; ?>
 
 <?php get_footer(); ?>

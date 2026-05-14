@@ -5,12 +5,27 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="theme-color" content="#fdfcfa" media="(prefers-color-scheme: light)">
 <meta name="theme-color" content="#14110d" media="(prefers-color-scheme: dark)">
+<meta name="view-transition" content="same-origin">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <script>
-/* Apply saved dark mode before first paint to avoid flash. Runs in <head>
-   pre-CSS so the inline script must stay tiny and synchronous. */
-(function(){try{var m=localStorage.getItem('sb-mode');if(m==='dark'||m==='light')document.documentElement.setAttribute('data-mode',m);}catch(e){}})();
+/* Pre-paint dark mode decision (must stay tiny and synchronous):
+   1. Explicit user preference wins.
+   2. Otherwise: OS prefers-color-scheme.
+   3. Otherwise: local time of day (dark from 7pm to 7am). */
+(function(){try{
+  var saved = localStorage.getItem('sb-mode');
+  if (saved === 'dark' || saved === 'light') {
+    document.documentElement.setAttribute('data-mode', saved);
+    return;
+  }
+  if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
+    document.documentElement.setAttribute('data-mode', 'dark');
+    return;
+  }
+  var h = new Date().getHours();
+  if (h < 7 || h >= 19) document.documentElement.setAttribute('data-mode', 'dark');
+} catch(e) {}})();
 </script>
 <?php wp_head(); ?>
 </head>
