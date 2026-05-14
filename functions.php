@@ -3,7 +3,7 @@
  * Steve Baron Theme — functions.php
  */
 
-define( 'STEVEBARON_VERSION', '1.1.0' );
+define( 'STEVEBARON_VERSION', '1.5.0' );
 define( 'STEVEBARON_DIR', get_template_directory() );
 define( 'STEVEBARON_URI', get_template_directory_uri() );
 

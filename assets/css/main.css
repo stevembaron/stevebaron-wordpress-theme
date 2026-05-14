@@ -2092,3 +2092,149 @@ body.sb-reading .sb-toc { display: none; }
   margin-top: 8px;
 }
 .slc-clock [data-slc-clock] { color: var(--ink-2); font-variant-numeric: tabular-nums; }
+
+/* ============================================================
+   END-OF-POST "Thanks for reading" CTA card
+   ============================================================ */
+
+.post-cta {
+  margin-top: var(--space-lg);
+  padding: 32px 36px;
+  background: var(--bg-2);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-lg);
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 24px;
+  align-items: center;
+  position: relative;
+  overflow: hidden;
+}
+.post-cta::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(circle at top right, color-mix(in oklab, var(--accent) 12%, transparent), transparent 60%);
+  pointer-events: none;
+}
+.post-cta-text { position: relative; }
+.post-cta-text h3 {
+  font-size: 22px;
+  margin: 0 0 6px;
+}
+.post-cta-text p {
+  color: var(--ink-2);
+  font-size: 15px;
+  margin: 0;
+}
+.post-cta-actions {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  align-items: flex-start;
+}
+@media (max-width: 700px) {
+  .post-cta { grid-template-columns: 1fr; padding: 24px; }
+  .post-cta-actions { flex-direction: row; flex-wrap: wrap; }
+}
+body.sb-reading .post-cta { display: none; }
+
+/* ============================================================
+   WEATHER TERM TOOLTIP (footer rotator hover)
+   ============================================================ */
+
+.footer-altitude .wx-rotate.has-tooltip {
+  border-bottom: 1px dashed var(--ink-3);
+  padding-bottom: 1px;
+}
+.sb-tooltip {
+  position: fixed;
+  max-width: 280px;
+  background: var(--ink);
+  color: var(--bg);
+  padding: 10px 14px;
+  border-radius: 8px;
+  font-family: var(--font-body);
+  font-size: 13px;
+  line-height: 1.4;
+  letter-spacing: 0;
+  z-index: 10001;
+  opacity: 0;
+  transform: translate(-50%, 4px);
+  transition: opacity .15s, transform .15s;
+  pointer-events: none;
+  box-shadow: 0 10px 24px rgba(0,0,0,.18);
+}
+.sb-tooltip.is-in { opacity: 1; transform: translate(-50%, 0); }
+.sb-tooltip::after {
+  content: '';
+  position: absolute;
+  bottom: -6px;
+  left: 50%;
+  transform: translateX(-50%);
+  border: 6px solid transparent;
+  border-top-color: var(--ink);
+  border-bottom: 0;
+}
+
+/* ============================================================
+   404 FLAVOR LINE
+   ============================================================ */
+
+.error-forecast-flavor {
+  margin-top: 12px;
+  padding-top: 12px;
+  border-top: 1px dashed var(--line);
+  color: var(--ink-3);
+  font-family: var(--font-mono);
+  font-size: 11.5px;
+  letter-spacing: .02em;
+}
+
+/* ============================================================
+   STAT CARD HOVER LIFT (home page)
+   ============================================================ */
+
+.stats-inner > div {
+  padding: 12px;
+  border-radius: var(--radius);
+  transition: transform .25s cubic-bezier(.2,.6,.2,1), background .2s;
+}
+.stats-inner > div:hover {
+  transform: translateY(-2px);
+  background: color-mix(in oklab, var(--accent) 6%, transparent);
+}
+
+/* ============================================================
+   PRINT — single posts (clean reading version)
+   ============================================================ */
+
+@media print {
+  body.single .post-cta,
+  body.single .post-nav,
+  body.single .post-share,
+  body.single .post-byline .post-share,
+  body.single .post-eyebrow,
+  body.single .sb-toc,
+  body.single .sb-reading-toggle,
+  body.single .post-featured-image {
+    display: none !important;
+  }
+  body.single .post-hero { padding: 0 !important; }
+  body.single .post-title { font-size: 22pt !important; margin: 0 0 6pt !important; }
+  body.single .post-summary { font-size: 12pt !important; color: #444 !important; font-style: italic; }
+  body.single .post-byline { padding: 0 !important; border: 0 !important; }
+  body.single .entry-content {
+    font-size: 11pt !important;
+    line-height: 1.5 !important;
+  }
+  body.single .entry-content h2 { font-size: 14pt !important; margin-top: 14pt !important; }
+  body.single .entry-content h3 { font-size: 12pt !important; }
+  body.single .entry-content a:not(.sb-anchor)[href^="http"]::after {
+    content: " <" attr(href) ">";
+    font-size: 9pt;
+    color: #555;
+    font-family: 'Courier New', monospace;
+  }
+}

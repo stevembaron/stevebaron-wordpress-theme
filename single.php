@@ -64,6 +64,19 @@ $tags     = get_the_tags();
       </div>
     <?php endif; ?>
 
+    <aside class="post-cta">
+      <div class="post-cta-text">
+        <h3><?php _e( 'Thanks for reading.', 'stevebaron' ); ?></h3>
+        <p>
+          <?php _e( "I write about product, AI, digital media, and occasionally the weather. If something in here struck a chord — or if you're working on a launch, an AI product, or a platform bet I'd find interesting — I'd love to hear from you.", 'stevebaron' ); ?>
+        </p>
+      </div>
+      <div class="post-cta-actions">
+        <a href="<?php echo esc_url( home_url( '/contact/' ) ); ?>" class="btn btn-primary"><?php _e( 'Get in touch →', 'stevebaron' ); ?></a>
+        <a href="<?php echo esc_url( get_feed_link() ); ?>" class="btn"><?php _e( 'Subscribe via RSS', 'stevebaron' ); ?></a>
+      </div>
+    </aside>
+
     <nav class="post-nav" aria-label="<?php _e('Post navigation','stevebaron'); ?>">
       <div>
         <?php previous_post_link('%link', '← %title'); ?>

@@ -696,7 +696,69 @@
     initHeroScrollCue();
     initFeaturedImageParallax();
     initLiveColorSchemeListener();
+
+    // v1.5 goodies
+    initWxTooltips();
+    init404FlavorText();
   });
+
+  // ── Wx-term tooltip definitions (footer rotator) ─────────────────────────
+
+  function initWxTooltips() {
+    var el = document.querySelector('.footer-altitude .wx-rotate');
+    if (!el) return;
+    var defs = {
+      'barometric pressure':      'The weight of the atmosphere above you. Falling pressure usually means weather is on the way.',
+      'dew point':                'The temperature at which air becomes saturated and dew forms. High dew point = sticky.',
+      'wet bulb temperature':     'What it feels like when sweat can fully evaporate. The classic "is this heat survivable" metric.',
+      'wind chill':               'How cold it feels factoring in heat loss from wind on exposed skin.',
+      'mean sea-level pressure':  'Barometric pressure adjusted as if you were standing at sea level. Lets meteorologists compare apples to apples.',
+      'frost point':              'The dew point equivalent when it would freeze instead of condense. Frost forecasts hinge on it.',
+      'METAR observations':       'The cryptic-looking weather report aviation uses. Half art, half code.',
+      'lapse rate':               'How fast temperature drops as you go up in elevation. Steep lapse rates make for unstable, thunderstorm-y air.',
+      'isobars':                  'Lines of equal pressure on a weather map. Tightly packed = windy.',
+      'orographic lift':          'When wind hits a mountain and is forced upward, cools, and dumps snow on the windward side. The whole reason Utah skiing is a thing.',
+    };
+    el.classList.add('has-tooltip');
+    el.style.cursor = 'help';
+    el.setAttribute('tabindex', '0');
+
+    var tip = null;
+    function show() {
+      var text = defs[el.textContent.trim().toLowerCase()];
+      if (!text) return;
+      if (!tip) { tip = document.createElement('div'); tip.className = 'sb-tooltip'; document.body.appendChild(tip); }
+      tip.textContent = text;
+      var rect = el.getBoundingClientRect();
+      tip.style.left = (rect.left + rect.width / 2) + 'px';
+      tip.style.bottom = (window.innerHeight - rect.top + 10) + 'px';
+      tip.classList.add('is-in');
+    }
+    function hide() { if (tip) tip.classList.remove('is-in'); }
+    el.addEventListener('mouseenter', show);
+    el.addEventListener('mouseleave', hide);
+    el.addEventListener('focus', show);
+    el.addEventListener('blur', hide);
+  }
+
+  // ── 404 page: rotating "forecast" flavor text ────────────────────────────
+
+  function init404FlavorText() {
+    var el = document.querySelector('.error-forecast');
+    if (!el) return;
+    var lines = [
+      '🌤  forecast updated every visit — no two are alike.',
+      '🌪  page swept up by an unusually persistent eddy.',
+      '🌫  visibility report: 0 feet at this URL.',
+      '❄  no precipitation in this directory.',
+      '⛈  severe link-broken warning in effect.',
+      '☀  conditions remain pleasant on every other URL.',
+    ];
+    var flavor = document.createElement('div');
+    flavor.className = 'error-forecast-flavor';
+    flavor.textContent = lines[Math.floor(Math.random() * lines.length)];
+    el.appendChild(flavor);
+  }
 
   // ── Hero "scroll for more" cue ───────────────────────────────────────────
 
