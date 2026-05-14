@@ -229,7 +229,6 @@ function stevebaron_create_fox_weather_draft(): int {
 
 	if ( is_wp_error( $post_id ) ) return 0;
 
-	// Category: "Product" (create if needed)
 	$cat_id = get_cat_ID( 'Product' );
 	if ( ! $cat_id ) {
 		$cat = wp_create_category( 'Product' );
@@ -237,10 +236,86 @@ function stevebaron_create_fox_weather_draft(): int {
 	}
 	if ( $cat_id ) wp_set_post_categories( $post_id, [ $cat_id ] );
 
-	// Tags
 	wp_set_post_tags( $post_id, [ 'FOX Weather', 'product', 'launch', 'App Store' ] );
 
 	return (int) $post_id;
+}
+
+// ── About page content ───────────────────────────────────────────────────────
+
+/**
+ * Returns the Gutenberg-block body of the About page.
+ */
+function stevebaron_about_page_content(): string {
+	$blocks = [
+		[ 'p',  "I'm Steve. Product, AI &amp; digital transformation executive based in Salt Lake City. I spent six and a half years rebuilding the digital platform at Tribune Media, then two and a half years at Fox Corporation building FOX Weather from a whiteboard sketch to #1 on the US App Store. Now I advise consumer technology, AI, and digital platform companies on the work that comes before launch." ],
+
+		[ 'h2', 'What I&#8217;m doing now' ],
+		[ 'p',  "Mostly: advising. Pre-launch product reviews, applied AI workflows, GTM execution, launch readiness. The engagements over the last two years have spanned consumer electronics hardware, AI assistants (response-quality, supervised fine-tuning, RAG), and a category-leading multimodal AI product at one of the global tech companies. Some of it is technical product work; some of it is helping a senior team see the third-best option that&#8217;s actually the right answer." ],
+		[ 'p',  "I&#8217;m based in Salt Lake City and I&#8217;m comfortable working remote, hybrid, or traveling as needed. Open to advisory, fractional, and full-time conversations." ],
+
+		[ 'h2', 'How I got here' ],
+		[ 'p',  "I started in 1993 as a weather anchor in Gainesville, Florida. The station hired me partly for my forecasting and partly because they needed someone who would also operate the camera. I did that for two years, then two years in South Bend, Indiana, then nine years in Salt Lake City as a meteorologist and reporter at FOX 13 News. I won an Emmy for Breaking News Coverage in 2006, which seemed like a reasonable cue to try something different." ],
+		[ 'p',  "That same year I moved to Chicago for my first digital leadership role at Fox Television Stations. From there: VP of Digital Content &amp; Technology at Local TV, LLC (sold to Tribune for $2.7B in 2013); VP of Digital &amp; Head of Product and Engineering at Tribune Media (sold to Nexstar in 2019 for $7.2B); a year of post-acquisition integration work at Nexstar; a focused engagement as Chief Strategy Officer at the Local Media Association; and then Fox Corporation called and asked if I&#8217;d come build a brand from scratch." ],
+		[ 'p',  "The FOX Weather years were a lot. I&#8217;ve written about that one <a href=\"/how-we-built-fox-weather-to-1/\">separately</a> — the short version is we shipped a full mobile, web, livestream, and VOD portfolio in six months, drove the app to #1 ahead of TikTok and Instagram on launch day, and earned a Webby Award for Visual Storytelling along the way. I left in May 2023 to start the advisory practice." ],
+
+		[ 'h2', 'What I care about' ],
+		[ 'p',  "A few things, on repeat:" ],
+		[ 'list', [
+			'<strong>Pick the team first.</strong> Argue for the budget the team needs, even if the budget gets you in trouble. Everything else is downstream of the people in the room.',
+			'<strong>Cut things you love.</strong> A smaller product on time beats a bigger product late. Most of the worst meetings I&#8217;ve sat in were about features that should have been killed two months earlier.',
+			'<strong>Distribution is part of the product.</strong> App Store Optimization, SEO, content distribution &mdash; they live in the same conversation as the product itself, not in a separate &#8220;marketing&#8221; track that gets booked the week before launch.',
+			'<strong>Translation matters.</strong> A career of explaining radar imagery to a TV camera turns out to be a remarkably useful skill in a product review.',
+		] ],
+
+		[ 'h2', 'Outside the work' ],
+		[ 'p',  "I live in Salt Lake City because the mountains are right there and the snow is real. The weather is still my favorite hobby &mdash; I have probably read more morning forecast discussions than is healthy. I bake bread, ski when I can, and spend a lot of time on trails with my family." ],
+
+		[ 'h2', 'Where to find me' ],
+		[ 'p',  "Email is best: <a href=\"mailto:steve@stevebaron.com\">steve@stevebaron.com</a>. I read everything and try to respond in a day or two. I&#8217;m also on <a href=\"https://linkedin.com/in/stevembaron\" target=\"_blank\" rel=\"noopener\">LinkedIn</a> &mdash; if you want a quick read on the executive arc, that&#8217;s the place. If you want to see what the team and I built at FOX Weather, the <a href=\"/how-we-built-fox-weather-to-1/\">launch essay</a> is a long but honest one." ],
+		[ 'p',  "If you&#8217;re working on a launch, an AI product, or a category bet where the path is not obvious yet &mdash; I&#8217;d love to hear about it." ],
+		[ 'p',  '— Steve' ],
+	];
+
+	$out = '';
+	foreach ( $blocks as $block ) {
+		[ $type, $content ] = $block;
+		if ( $type === 'p' ) {
+			$out .= "<!-- wp:paragraph -->\n<p>{$content}</p>\n<!-- /wp:paragraph -->\n\n";
+		} elseif ( $type === 'h2' ) {
+			$out .= "<!-- wp:heading -->\n<h2 class=\"wp-block-heading\">{$content}</h2>\n<!-- /wp:heading -->\n\n";
+		} elseif ( $type === 'list' ) {
+			$items = '';
+			foreach ( (array) $content as $li ) {
+				$items .= "<!-- wp:list-item -->\n<li>{$li}</li>\n<!-- /wp:list-item -->\n";
+			}
+			$out .= "<!-- wp:list -->\n<ul class=\"wp-block-list\">\n{$items}</ul>\n<!-- /wp:list -->\n\n";
+		}
+	}
+	return $out;
+}
+
+/**
+ * Populates the About page with the canonical content. Skips the write
+ * if the page already has content unless $force = true. Returns:
+ *   'no-page'   — no About page exists
+ *   'has-content' — page has content and force = false
+ *   'updated'   — content (and excerpt) were written
+ */
+function stevebaron_populate_about_page( bool $force = false ): string {
+	$about = get_page_by_path( 'about' );
+	if ( ! $about ) return 'no-page';
+	$current = trim( strip_tags( wp_strip_all_tags( $about->post_content ) ) );
+	if ( $current !== '' && ! $force ) return 'has-content';
+
+	$excerpt = "I've spent 25+ years moving ambiguous product, audience, and growth problems from impossible to shipped — most recently as the SVP who built FOX Weather to #1 on the US App Store. These days I'm advising the people doing similar work.";
+
+	wp_update_post( [
+		'ID'           => $about->ID,
+		'post_content' => stevebaron_about_page_content(),
+		'post_excerpt' => $excerpt,
+	] );
+	return 'updated';
 }
 
 // ── Admin page: Tools → Site Setup ───────────────────────────────────────
@@ -282,6 +357,13 @@ function stevebaron_setup_admin_page() {
 		$existing      = get_page_by_path( 'how-we-built-fox-weather-to-1', OBJECT, 'post' );
 		$fox_created   = ! $existing;
 		$fox_draft_id  = stevebaron_create_fox_weather_draft();
+	}
+
+	$about_result = '';
+	if ( isset( $_POST['stevebaron_about_nonce'] )
+		&& wp_verify_nonce( sanitize_text_field( wp_unslash( $_POST['stevebaron_about_nonce'] ) ), 'stevebaron_about' ) ) {
+		$force        = ! empty( $_POST['stevebaron_about_force'] );
+		$about_result = stevebaron_populate_about_page( $force );
 	}
 
 	$pages = stevebaron_expected_pages();
@@ -459,6 +541,49 @@ function stevebaron_setup_admin_page() {
 					<?php esc_html_e( 'A draft already exists. Clicking will just open it again.', 'stevebaron' ); ?>
 				</span>
 			<?php endif; ?>
+		</form>
+
+		<hr style="margin:48px 0 24px;">
+
+		<h2><?php esc_html_e( 'About page content', 'stevebaron' ); ?></h2>
+		<p>
+			<?php esc_html_e( 'A long-form About page is shipped with the theme (see content/about-DRAFT.md). Click below to populate your About page with this content. By default it will only write if the page is currently empty — toggle the checkbox to overwrite existing content.', 'stevebaron' ); ?>
+		</p>
+
+		<?php if ( $about_result === 'updated' ) : ?>
+			<div class="notice notice-success">
+				<p><strong><?php esc_html_e( 'About page updated.', 'stevebaron' ); ?></strong></p>
+				<p>
+					<?php $about_page = get_page_by_path( 'about' ); if ( $about_page ) : ?>
+						<a href="<?php echo esc_url( get_edit_post_link( $about_page->ID ) ); ?>" class="button button-primary"><?php esc_html_e( 'Edit in Gutenberg →', 'stevebaron' ); ?></a>
+						<a href="<?php echo esc_url( get_permalink( $about_page->ID ) ); ?>" class="button" target="_blank"><?php esc_html_e( 'View About page', 'stevebaron' ); ?></a>
+					<?php endif; ?>
+				</p>
+			</div>
+		<?php elseif ( $about_result === 'has-content' ) : ?>
+			<div class="notice notice-warning">
+				<p>
+					<strong><?php esc_html_e( 'Skipped.', 'stevebaron' ); ?></strong>
+					<?php esc_html_e( 'The About page already has content. Check the box below and re-submit to overwrite.', 'stevebaron' ); ?>
+				</p>
+			</div>
+		<?php elseif ( $about_result === 'no-page' ) : ?>
+			<div class="notice notice-error">
+				<p><?php esc_html_e( 'No About page found. Run "Run site setup" above first to create it.', 'stevebaron' ); ?></p>
+			</div>
+		<?php endif; ?>
+
+		<form method="post" style="margin-top:16px;">
+			<?php wp_nonce_field( 'stevebaron_about', 'stevebaron_about_nonce' ); ?>
+			<p style="margin:0 0 12px;">
+				<label>
+					<input type="checkbox" name="stevebaron_about_force" value="1">
+					<?php esc_html_e( 'Overwrite existing content (use carefully)', 'stevebaron' ); ?>
+				</label>
+			</p>
+			<button type="submit" class="button button-primary">
+				<?php esc_html_e( 'Populate About page content', 'stevebaron' ); ?>
+			</button>
 		</form>
 	</div>
 	<?php
