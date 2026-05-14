@@ -86,6 +86,9 @@
     </nav>
 
     <div class="nav-actions">
+      <?php if ( get_theme_mod( 'sb_contact_available', true ) ) : ?>
+        <a href="<?php echo esc_url( home_url( '/contact/' ) ); ?>" class="nav-status"><?php esc_html_e( 'Open to advisory', 'stevebaron' ); ?></a>
+      <?php endif; ?>
       <!-- Dark mode toggle -->
       <button class="dark-toggle" aria-label="<?php _e('Toggle dark mode','stevebaron'); ?>">
         <svg class="icon-moon" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2">

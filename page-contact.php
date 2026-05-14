@@ -26,6 +26,12 @@ $cards = [
       <p class="lead"><?php echo esc_html($subtext); ?></p>
     <?php endif; ?>
 
+    <div class="slc-clock">
+      <?php esc_html_e( "It's currently", 'stevebaron' ); ?>
+      <strong data-slc-clock>—</strong>
+      <?php esc_html_e( 'in Salt Lake City.', 'stevebaron' ); ?>
+    </div>
+
     <div class="contact-cards">
       <?php foreach ($cards as [$label, $key, $prefix]) : ?>
         <?php $val = get_theme_mod('sb_social_' . $key,''); if (!$val) continue; ?>

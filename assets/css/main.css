@@ -1842,3 +1842,181 @@ body.sb-weather-geek .nav-brand-mark {
   50%      { transform: rotate(3deg); }
 }
 body.sb-weather-geek a:hover { text-decoration: underline wavy var(--accent); }
+
+/* ============================================================
+   POST TABLE OF CONTENTS (sticky sidebar)
+   ============================================================ */
+
+.sb-toc {
+  position: fixed;
+  top: 120px;
+  right: max(24px, calc((100vw - 720px) / 2 - 240px));
+  width: 200px;
+  max-height: calc(100vh - 160px);
+  overflow-y: auto;
+  z-index: 50;
+  font-family: var(--font-mono);
+  font-size: 11.5px;
+  letter-spacing: .02em;
+  color: var(--ink-3);
+  padding-left: 14px;
+  border-left: 1px solid var(--line);
+  opacity: 0;
+  animation: sb-toc-in .35s .8s ease-out forwards;
+}
+@keyframes sb-toc-in { to { opacity: 1; } }
+.sb-toc-title {
+  text-transform: uppercase;
+  letter-spacing: .12em;
+  color: var(--ink-3);
+  margin-bottom: 10px;
+}
+.sb-toc ol {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+.sb-toc li {
+  padding: 4px 0;
+  transition: padding-left .2s;
+}
+.sb-toc-h3 { padding-left: 14px; font-size: 11px; }
+.sb-toc a {
+  color: var(--ink-3);
+  text-decoration: none;
+  display: block;
+  transition: color .15s;
+}
+.sb-toc a:hover { color: var(--ink); }
+.sb-toc li.is-active {
+  padding-left: 6px;
+}
+.sb-toc li.is-active a {
+  color: var(--accent);
+}
+.sb-toc-h3.is-active { padding-left: 20px; }
+.sb-toc::-webkit-scrollbar { width: 4px; }
+.sb-toc::-webkit-scrollbar-thumb { background: var(--line); border-radius: 4px; }
+@media (max-width: 1180px) {
+  .sb-toc { display: none; }
+}
+body.sb-reading .sb-toc { display: none; }
+
+/* ============================================================
+   POST BODY LINK — animated underline reveal
+   ============================================================ */
+
+.entry-content p a:not(.sb-anchor),
+.entry-content li a:not(.sb-anchor) {
+  position: relative;
+  text-decoration: none;
+  background-image: linear-gradient(var(--accent), var(--accent));
+  background-repeat: no-repeat;
+  background-position: 0 100%;
+  background-size: 0 1.5px;
+  transition: background-size .35s cubic-bezier(.2,.6,.2,1), color .15s;
+  padding-bottom: 1px;
+}
+.entry-content p a:not(.sb-anchor):hover,
+.entry-content li a:not(.sb-anchor):hover {
+  background-size: 100% 1.5px;
+}
+
+/* ============================================================
+   PROJECT CARD TILT (sets up perspective container)
+   ============================================================ */
+
+.projects-grid { perspective: 1000px; }
+.project-card { will-change: transform; }
+
+/* ============================================================
+   FIGURE CAPTIONS in post body
+   ============================================================ */
+
+.entry-content figure { margin: 32px 0; }
+.entry-content figcaption {
+  margin-top: 10px;
+  font-family: var(--font-mono);
+  font-size: 12px;
+  color: var(--ink-3);
+  text-align: center;
+  letter-spacing: .02em;
+}
+
+/* ============================================================
+   PHOTO CAPTION HOVER OVERLAY
+   ============================================================ */
+
+.photo-item { position: relative; overflow: hidden; }
+.photo-item .photo-caption {
+  position: absolute;
+  left: 0; right: 0; bottom: 0;
+  padding: 16px 18px 14px;
+  background: linear-gradient(180deg, transparent 0%, rgba(0,0,0,.7) 100%);
+  color: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  opacity: 0;
+  transform: translateY(8px);
+  transition: opacity .25s, transform .25s cubic-bezier(.2,.6,.2,1);
+}
+.photo-item:hover .photo-caption,
+.photo-item:focus-within .photo-caption { opacity: 1; transform: translateY(0); }
+.photo-item .photo-caption-tag {
+  font-family: var(--font-mono);
+  font-size: 10.5px;
+  letter-spacing: .08em;
+  text-transform: uppercase;
+  padding: 3px 8px;
+  border-radius: 99px;
+  background: rgba(255,255,255,.18);
+  backdrop-filter: blur(8px);
+}
+
+/* ============================================================
+   NAV "OPEN TO WORK" STATUS PILL
+   ============================================================ */
+
+.nav-status {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 10px;
+  border-radius: 99px;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  letter-spacing: .04em;
+  color: #1a7f37;
+  background: color-mix(in oklab, #22c55e 14%, transparent);
+  border: 1px solid color-mix(in oklab, #22c55e 35%, transparent);
+  text-decoration: none;
+  transition: background .15s, transform .15s;
+}
+[data-mode="dark"] .nav-status { color: #6ee7a3; }
+.nav-status:hover { transform: translateY(-1px); }
+.nav-status::before {
+  content: '';
+  width: 6px; height: 6px;
+  border-radius: 50%;
+  background: #22c55e;
+  box-shadow: 0 0 0 0 rgba(34,197,94,.6);
+  animation: sb-pulse-live 2.2s ease-in-out infinite;
+}
+@media (max-width: 900px) { .nav-status { display: none; } }
+
+/* ============================================================
+   SLC LOCAL CLOCK on contact
+   ============================================================ */
+
+.slc-clock {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-family: var(--font-mono);
+  font-size: 12.5px;
+  color: var(--ink-3);
+  margin-top: 8px;
+}
+.slc-clock [data-slc-clock] { color: var(--ink-2); font-variant-numeric: tabular-nums; }

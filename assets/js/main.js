@@ -605,7 +605,128 @@
     initKonami();
     initBrandEasterEgg();
     init404Random();
+
+    // v1.3 goodies
+    initProjectTilt();
+    initPostTOC();
+    initFirstVisitHint();
+    initSLCClock();
   });
+
+  // ── Project card 3D tilt on hover (home + projects pages) ────────────────
+
+  function initProjectTilt() {
+    if (prefersReducedMotion) return;
+    var cards = document.querySelectorAll('.project-card');
+    if (!cards.length) return;
+    cards.forEach(function (card) {
+      var rafId = 0;
+      card.style.transformStyle = 'preserve-3d';
+      card.style.transition = 'transform .25s cubic-bezier(.2,.6,.2,1), box-shadow .25s';
+      card.addEventListener('mousemove', function (e) {
+        var rect = card.getBoundingClientRect();
+        var x = (e.clientX - rect.left) / rect.width  - 0.5;
+        var y = (e.clientY - rect.top)  / rect.height - 0.5;
+        if (rafId) return;
+        rafId = requestAnimationFrame(function () {
+          card.style.transform =
+            'perspective(900px) rotateX(' + (-y * 4).toFixed(2) + 'deg) rotateY(' + (x * 5).toFixed(2) + 'deg) translateY(-3px)';
+          rafId = 0;
+        });
+      });
+      card.addEventListener('mouseleave', function () {
+        card.style.transform = '';
+      });
+    });
+  }
+
+  // ── Table of Contents + scroll-spy on long posts ─────────────────────────
+
+  function initPostTOC() {
+    var entry = document.querySelector('.post-hero .entry-content');
+    if (!entry) return;
+    var headings = entry.querySelectorAll('h2, h3');
+    if (headings.length < 3) return; // only worth showing for substantial posts
+
+    var toc = document.createElement('nav');
+    toc.className = 'sb-toc';
+    toc.setAttribute('aria-label', 'Table of contents');
+    var h = '<div class="sb-toc-title">On this page</div><ol>';
+    headings.forEach(function (heading, i) {
+      if (!heading.id) {
+        var base = (heading.textContent || '').trim().toLowerCase()
+          .replace(/[^a-z0-9\s-]/g, '').replace(/\s+/g, '-').slice(0, 60) || ('section-' + i);
+        var id = base; var n = 2;
+        while (document.getElementById(id)) { id = base + '-' + (n++); }
+        heading.id = id;
+      }
+      var level = heading.tagName.toLowerCase();
+      h += '<li class="sb-toc-' + level + '"><a href="#' + heading.id + '">' + (heading.textContent || '').replace(/[#]+$/, '').trim() + '</a></li>';
+    });
+    h += '</ol>';
+    toc.innerHTML = h;
+    document.body.appendChild(toc);
+
+    var anchors = toc.querySelectorAll('a');
+    function setActive(id) {
+      anchors.forEach(function (a) {
+        a.parentElement.classList.toggle('is-active', a.getAttribute('href') === '#' + id);
+      });
+    }
+
+    if ('IntersectionObserver' in window) {
+      var visible = new Map();
+      var io = new IntersectionObserver(function (entries) {
+        entries.forEach(function (e) {
+          if (e.isIntersecting) visible.set(e.target.id, e.target);
+          else visible.delete(e.target.id);
+        });
+        var first = null, firstTop = Infinity;
+        visible.forEach(function (el) {
+          var t = el.getBoundingClientRect().top;
+          if (t < firstTop) { firstTop = t; first = el.id; }
+        });
+        if (first) setActive(first);
+      }, { rootMargin: '-120px 0px -55% 0px' });
+      headings.forEach(function (h) { io.observe(h); });
+    }
+  }
+
+  // ── First-visit hint toast ───────────────────────────────────────────────
+
+  function initFirstVisitHint() {
+    try {
+      if (localStorage.getItem('sb-seen-cmdk')) return;
+      // Don't hint on first-page-load if they're using a tiny screen
+      if (window.innerWidth < 600) return;
+      setTimeout(function () {
+        var isMac = /Mac|iPhone|iPad/.test(navigator.platform || '');
+        showAlert('Tip: press ' + (isMac ? '⌘K' : 'Ctrl+K') + ' to jump anywhere on this site.', 6500);
+        try { localStorage.setItem('sb-seen-cmdk', '1'); } catch (e) {}
+      }, 3500);
+    } catch (e) {}
+  }
+
+  // ── Local SLC clock on the contact page ──────────────────────────────────
+
+  function initSLCClock() {
+    var el = document.querySelector('[data-slc-clock]');
+    if (!el) return;
+    // SLC is America/Denver. Use Intl to avoid math.
+    function tick() {
+      try {
+        var f = new Intl.DateTimeFormat('en-US', {
+          timeZone: 'America/Denver',
+          hour: 'numeric', minute: '2-digit', hour12: true,
+        });
+        el.textContent = f.format(new Date());
+      } catch (e) {
+        el.textContent = new Date().toLocaleTimeString();
+      }
+    }
+    tick();
+    setInterval(tick, 1000);
+  }
 
   // ── Smart time-of-day greeting (eyebrow on home) ─────────────────────────
 
