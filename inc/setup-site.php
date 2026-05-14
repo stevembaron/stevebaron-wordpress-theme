@@ -463,6 +463,66 @@ function stevebaron_setup_admin_page() {
 	<?php
 }
 
+// ── Dashboard widget ─────────────────────────────────────────────────────
+
+add_action( 'wp_dashboard_setup', function () {
+	wp_add_dashboard_widget(
+		'stevebaron_dashboard',
+		__( 'Steve Baron · at a glance', 'stevebaron' ),
+		'stevebaron_dashboard_widget'
+	);
+} );
+
+function stevebaron_dashboard_widget() {
+	$posts    = (int) wp_count_posts( 'post' )->publish;
+	$drafts   = (int) wp_count_posts( 'post' )->draft;
+	$cv       = (int) wp_count_posts( 'sb_experience' )->publish;
+	$projects = (int) wp_count_posts( 'sb_project' )->publish;
+	$photos   = (int) wp_count_posts( 'sb_photo' )->publish;
+
+	$latest = get_posts( [ 'numberposts' => 3, 'post_status' => [ 'publish', 'draft' ] ] );
+	?>
+	<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:12px;margin-bottom:16px;">
+		<?php foreach ( [
+			[ __( 'Posts', 'stevebaron' ),    $posts,    'edit.php' ],
+			[ __( 'Drafts', 'stevebaron' ),   $drafts,   'edit.php?post_status=draft' ],
+			[ __( 'CV entries', 'stevebaron' ), $cv,     'edit.php?post_type=sb_experience' ],
+			[ __( 'Projects', 'stevebaron' ), $projects, 'edit.php?post_type=sb_project' ],
+			[ __( 'Photos', 'stevebaron' ),   $photos,   'edit.php?post_type=sb_photo' ],
+		] as $card ) : ?>
+			<a href="<?php echo esc_url( admin_url( $card[2] ) ); ?>" style="display:block;background:#f4f0e8;border-radius:8px;padding:14px 16px;color:#1a1614;text-decoration:none;border:1px solid rgba(0,0,0,.05);">
+				<div style="font-size:28px;font-weight:700;line-height:1.1;color:#c2410c;"><?php echo (int) $card[1]; ?></div>
+				<div style="font-size:11px;text-transform:uppercase;letter-spacing:.08em;color:#4a4138;margin-top:2px;"><?php echo esc_html( $card[0] ); ?></div>
+			</a>
+		<?php endforeach; ?>
+	</div>
+
+	<?php if ( $latest ) : ?>
+		<h3 style="margin-top:8px;font-size:13px;color:#4a4138;"><?php esc_html_e( 'Latest posts', 'stevebaron' ); ?></h3>
+		<ul style="margin:0;padding:0;list-style:none;">
+			<?php foreach ( $latest as $p ) :
+				$status_label = $p->post_status === 'publish' ? '' : ' (' . esc_html( $p->post_status ) . ')';
+			?>
+				<li style="padding:6px 0;border-bottom:1px solid #eee;">
+					<a href="<?php echo esc_url( get_edit_post_link( $p->ID ) ); ?>" style="text-decoration:none;color:#1a1614;font-weight:600;">
+						<?php echo esc_html( get_the_title( $p ) ); ?>
+					</a><?php echo $status_label; ?>
+					<span style="color:#8a7f6e;font-size:12px;margin-left:8px;"><?php echo esc_html( get_the_date( '', $p ) ); ?></span>
+				</li>
+			<?php endforeach; ?>
+		</ul>
+	<?php endif; ?>
+
+	<p style="margin-top:14px;font-size:12px;">
+		<a href="<?php echo esc_url( admin_url( 'tools.php?page=stevebaron-setup' ) ); ?>"><?php esc_html_e( 'Site Setup →', 'stevebaron' ); ?></a>
+		&nbsp;·&nbsp;
+		<a href="<?php echo esc_url( admin_url( 'customize.php' ) ); ?>"><?php esc_html_e( 'Customize →', 'stevebaron' ); ?></a>
+		&nbsp;·&nbsp;
+		<a href="<?php echo esc_url( home_url( '/' ) ); ?>" target="_blank"><?php esc_html_e( 'View site →', 'stevebaron' ); ?></a>
+	</p>
+	<?php
+}
+
 // ── Admin notice prompting setup ─────────────────────────────────────────
 
 add_action( 'admin_notices', function () {

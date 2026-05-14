@@ -20,10 +20,13 @@
   var lightboxOpen = false;
   var lastFocus = null;
 
-  function openLightbox(img) {
+  function openLightbox(img, gallery, index) {
     if (!img || lightboxOpen) return;
     lightboxOpen = true;
     lastFocus = document.activeElement;
+
+    gallery = gallery || [img];
+    index   = typeof index === 'number' ? index : gallery.indexOf(img);
 
     var overlay = document.createElement('div');
     overlay.className = 'sb-lightbox';
@@ -33,11 +36,40 @@
     overlay.tabIndex = -1;
 
     var bigImg = document.createElement('img');
-    bigImg.src = img.currentSrc || img.src;
-    if (img.srcset) bigImg.srcset = img.srcset;
-    bigImg.alt = img.alt || '';
     bigImg.decoding = 'async';
     overlay.appendChild(bigImg);
+
+    var counter = document.createElement('div');
+    counter.className = 'sb-lightbox-counter';
+    overlay.appendChild(counter);
+
+    var prevBtn = null, nextBtn = null;
+    if (gallery.length > 1) {
+      prevBtn = document.createElement('button');
+      prevBtn.type = 'button';
+      prevBtn.className = 'sb-lightbox-nav sb-lightbox-prev';
+      prevBtn.setAttribute('aria-label', 'Previous photo');
+      prevBtn.innerHTML = '<svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M15 18l-6-6 6-6"/></svg>';
+      nextBtn = document.createElement('button');
+      nextBtn.type = 'button';
+      nextBtn.className = 'sb-lightbox-nav sb-lightbox-next';
+      nextBtn.setAttribute('aria-label', 'Next photo');
+      nextBtn.innerHTML = '<svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M9 6l6 6-6 6"/></svg>';
+      overlay.appendChild(prevBtn);
+      overlay.appendChild(nextBtn);
+      prevBtn.addEventListener('click', function (e) { e.stopPropagation(); show(index - 1); });
+      nextBtn.addEventListener('click', function (e) { e.stopPropagation(); show(index + 1); });
+    }
+
+    function show(i) {
+      index = ((i % gallery.length) + gallery.length) % gallery.length;
+      var target = gallery[index];
+      bigImg.src = target.currentSrc || target.src;
+      bigImg.srcset = target.srcset || '';
+      bigImg.alt = target.alt || '';
+      counter.textContent = gallery.length > 1 ? (index + 1) + ' / ' + gallery.length : '';
+      overlay.setAttribute('aria-label', target.alt || 'Photo');
+    }
 
     function close() {
       if (!lightboxOpen) return;
@@ -47,13 +79,20 @@
       document.removeEventListener('keydown', onKey);
       if (lastFocus && lastFocus.focus) lastFocus.focus();
     }
-    function onKey(e) { if (e.key === 'Escape') close(); }
+    function onKey(e) {
+      if (e.key === 'Escape') close();
+      else if (e.key === 'ArrowRight' && gallery.length > 1) show(index + 1);
+      else if (e.key === 'ArrowLeft'  && gallery.length > 1) show(index - 1);
+    }
 
-    overlay.addEventListener('click', close);
+    overlay.addEventListener('click', function (e) {
+      if (e.target === overlay || e.target === bigImg) close();
+    });
     document.addEventListener('keydown', onKey);
     document.body.style.overflow = 'hidden';
     document.body.appendChild(overlay);
     overlay.focus();
+    show(index);
   }
 
   // ── Live SLC weather (NWS API) ───────────────────────────────────────────
@@ -360,21 +399,42 @@
       { name: 'View source on GitHub',    url: 'https://github.com/stevembaron/stevebaron-wordpress-theme', type: 'external' },
     ];
 
-    var posts = [];
-    // Lazy: load posts on first open to keep page load fast.
-    var postsLoaded = false;
-    function loadPosts() {
-      if (postsLoaded) return;
-      postsLoaded = true;
-      fetch(HOME + 'wp-json/wp/v2/posts?per_page=30&_fields=id,title,link', { headers: { 'Accept': 'application/json' } })
+    var recentPosts = [];   // shown when input is empty
+    var searchHits  = [];   // shown when input is non-empty
+    var searching   = false;
+    var searchTimer = 0;
+    var searchAbort = null;
+
+    function loadRecentPosts() {
+      if (recentPosts.length) return;
+      fetch(HOME + 'wp-json/wp/v2/posts?per_page=10&_fields=id,title,link', { headers: { 'Accept': 'application/json' } })
         .then(function (r) { return r.ok ? r.json() : []; })
         .then(function (data) {
-          posts = (data || []).map(function (p) {
+          recentPosts = (data || []).map(function (p) {
             return { name: p.title.rendered.replace(/<[^>]+>/g, ''), url: p.link, type: 'post' };
           });
-          if (overlay && overlay.classList.contains('is-open')) render();
+          if (overlay && overlay.classList.contains('is-open') && !input.value) render();
         })
         .catch(function () {});
+    }
+
+    function runSearch(q) {
+      if (searchAbort) searchAbort.abort();
+      searchAbort = ('AbortController' in window) ? new AbortController() : null;
+      searching = true;
+      render();
+      // WP universal search endpoint, restricted to posts.
+      var url = HOME + 'wp-json/wp/v2/search?per_page=10&type=post&search=' + encodeURIComponent(q);
+      fetch(url, { headers: { 'Accept': 'application/json' }, signal: searchAbort ? searchAbort.signal : undefined })
+        .then(function (r) { return r.ok ? r.json() : []; })
+        .then(function (data) {
+          searchHits = (data || []).map(function (r) {
+            return { name: (r.title || '').replace(/<[^>]+>/g, ''), url: r.url, type: 'post' };
+          });
+          searching = false;
+          render();
+        })
+        .catch(function () { searching = false; });
     }
 
     function escapeHtml(s) {
@@ -389,27 +449,42 @@
     }
 
     function render() {
-      var q = input.value.trim().toLowerCase();
-      var all = staticCommands.concat(posts);
-      if (q) {
-        items = all.filter(function (c) { return c.name.toLowerCase().indexOf(q) !== -1; });
-      } else {
+      var q = input.value.trim();
+      if (!q) {
+        var all = staticCommands.concat(recentPosts);
         items = all;
+      } else {
+        // Local fuzzy match across static commands; merge with API hits.
+        var qLower = q.toLowerCase();
+        var staticMatches = staticCommands.filter(function (c) {
+          return c.name.toLowerCase().indexOf(qLower) !== -1;
+        });
+        items = staticMatches.concat(searchHits);
       }
       activeIndex = 0;
-      list.innerHTML = items.length
+      var html = items.length
         ? items.map(function (c, i) {
             return '<div class="sb-cmdk-item' + (i === 0 ? ' is-active' : '') + '" role="option" data-i="' + i + '">'
               + '<span class="sb-cmdk-name">' + escapeHtml(c.name) + '</span>'
               + '<span class="sb-cmdk-badge">' + badgeFor(c.type) + '</span>'
               + '</div>';
           }).join('')
-        : '<div class="sb-cmdk-empty">No matches</div>';
+        : (searching ? '<div class="sb-cmdk-empty">Searching…</div>' : '<div class="sb-cmdk-empty">No matches</div>');
+      list.innerHTML = html;
       Array.prototype.forEach.call(list.children, function (el) {
         if (!el.dataset || !el.dataset.i) return;
         el.addEventListener('click', function () { execute(parseInt(el.dataset.i, 10)); });
         el.addEventListener('mouseenter', function () { setActive(parseInt(el.dataset.i, 10), false); });
       });
+    }
+
+    function onInput() {
+      var q = input.value.trim();
+      clearTimeout(searchTimer);
+      if (!q) { searchHits = []; render(); return; }
+      // Debounce 180ms.
+      searchTimer = setTimeout(function () { runSearch(q); }, 180);
+      render();
     }
 
     function setActive(i, scroll) {
@@ -457,14 +532,14 @@
       input = overlay.querySelector('.sb-cmdk-input');
       list  = overlay.querySelector('.sb-cmdk-list');
       overlay.addEventListener('click', function (e) { if (e.target === overlay) close(); });
-      input.addEventListener('input', render);
+      input.addEventListener('input', onInput);
       input.addEventListener('keydown', onKey);
       document.body.appendChild(overlay);
     }
 
     function open() {
       if (!overlay) build();
-      loadPosts();
+      loadRecentPosts();
       overlay.classList.add('is-open');
       document.body.style.overflow = 'hidden';
       input.value = '';
@@ -545,13 +620,18 @@
       });
     });
 
-    document.querySelectorAll('.photo-item').forEach(function (item) {
+    var photoItems = document.querySelectorAll('.photo-item');
+    var galleryImgs = Array.prototype.map.call(photoItems, function (item) { return item.querySelector('img'); }).filter(Boolean);
+    photoItems.forEach(function (item, idx) {
       item.style.cursor = 'zoom-in';
       item.setAttribute('tabindex', '0');
       item.setAttribute('role', 'button');
-      item.addEventListener('click', function () { openLightbox(item.querySelector('img')); });
+      item.addEventListener('click', function () { openLightbox(item.querySelector('img'), galleryImgs, galleryImgs.indexOf(item.querySelector('img'))); });
       item.addEventListener('keydown', function (e) {
-        if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); openLightbox(item.querySelector('img')); }
+        if (e.key === 'Enter' || e.key === ' ') {
+          e.preventDefault();
+          openLightbox(item.querySelector('img'), galleryImgs, galleryImgs.indexOf(item.querySelector('img')));
+        }
       });
     });
 
@@ -611,7 +691,71 @@
     initPostTOC();
     initFirstVisitHint();
     initSLCClock();
+
+    // v1.4 goodies
+    initHeroScrollCue();
+    initFeaturedImageParallax();
+    initLiveColorSchemeListener();
   });
+
+  // ── Hero "scroll for more" cue ───────────────────────────────────────────
+
+  function initHeroScrollCue() {
+    var hero = document.querySelector('.hero');
+    if (!hero) return;
+    var cue = document.createElement('div');
+    cue.className = 'sb-scroll-cue';
+    cue.innerHTML = '<span>scroll</span><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M7 10l5 5 5-5"/></svg>';
+    cue.addEventListener('click', function () {
+      var next = hero.nextElementSibling;
+      if (next && next.scrollIntoView) next.scrollIntoView({ behavior: prefersReducedMotion ? 'auto' : 'smooth' });
+    });
+    hero.appendChild(cue);
+
+    function maybeHide() {
+      if (window.scrollY > 80) cue.classList.add('is-hidden');
+      else cue.classList.remove('is-hidden');
+    }
+    window.addEventListener('scroll', maybeHide, { passive: true });
+    maybeHide();
+  }
+
+  // ── Featured image parallax on post pages ────────────────────────────────
+
+  function initFeaturedImageParallax() {
+    if (prefersReducedMotion) return;
+    var img = document.querySelector('.post-hero .post-featured-image');
+    if (!img) return;
+    img.style.willChange = 'transform';
+    var rafId = 0;
+    function update() {
+      var rect = img.getBoundingClientRect();
+      // Move slowly downward as user scrolls past
+      var offset = Math.max(-40, Math.min(40, -rect.top * 0.05));
+      img.style.transform = 'translate3d(0,' + offset.toFixed(1) + 'px,0)';
+      rafId = 0;
+    }
+    window.addEventListener('scroll', function () {
+      if (!rafId) rafId = requestAnimationFrame(update);
+    }, { passive: true });
+    update();
+  }
+
+  // ── Live OS color-scheme reaction (when user has no explicit preference) ─
+
+  function initLiveColorSchemeListener() {
+    try {
+      // If user has set an explicit mode, don't auto-switch.
+      if (localStorage.getItem('sb-mode')) return;
+    } catch (e) {}
+    if (!window.matchMedia) return;
+    var mql = window.matchMedia('(prefers-color-scheme: dark)');
+    var handler = function (e) {
+      html.setAttribute('data-mode', e.matches ? 'dark' : 'light');
+    };
+    if (mql.addEventListener) mql.addEventListener('change', handler);
+    else if (mql.addListener) mql.addListener(handler);
+  }
 
   // ── Project card 3D tilt on hover (home + projects pages) ────────────────
 

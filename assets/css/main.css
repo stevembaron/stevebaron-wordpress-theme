@@ -1190,6 +1190,78 @@ img { max-width: 100%; height: auto; display: block; }
 @keyframes sb-fade-in { from { opacity: 0; } to { opacity: 1; } }
 .sb-lightbox:focus { outline: none; }
 
+.sb-lightbox-nav {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 48px; height: 48px;
+  border-radius: 50%;
+  background: rgba(255,255,255,.12);
+  color: #fff;
+  border: 1px solid rgba(255,255,255,.18);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  backdrop-filter: blur(8px);
+  transition: background .15s, transform .15s;
+}
+.sb-lightbox-nav:hover { background: rgba(255,255,255,.22); transform: translateY(-50%) scale(1.05); }
+.sb-lightbox-prev { left: 24px; }
+.sb-lightbox-next { right: 24px; }
+.sb-lightbox-counter {
+  position: absolute;
+  bottom: 24px;
+  left: 50%;
+  transform: translateX(-50%);
+  font-family: var(--font-mono);
+  font-size: 12px;
+  color: rgba(255,255,255,.7);
+  letter-spacing: .05em;
+}
+@media (max-width: 600px) {
+  .sb-lightbox-prev { left: 8px; }
+  .sb-lightbox-next { right: 8px; }
+  .sb-lightbox-nav { width: 40px; height: 40px; }
+}
+
+/* ============================================================
+   HERO "scroll for more" CUE
+   ============================================================ */
+
+.sb-scroll-cue {
+  position: absolute;
+  bottom: 24px;
+  left: 50%;
+  transform: translateX(-50%);
+  display: inline-flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  font-family: var(--font-mono);
+  font-size: 10.5px;
+  letter-spacing: .14em;
+  text-transform: uppercase;
+  color: var(--ink-3);
+  cursor: pointer;
+  opacity: .85;
+  transition: opacity .35s, transform .35s;
+  animation: sb-scroll-bounce 2.6s ease-in-out infinite;
+}
+.sb-scroll-cue:hover { color: var(--accent); }
+.sb-scroll-cue.is-hidden { opacity: 0; pointer-events: none; transform: translate(-50%, 12px); animation: none; }
+@keyframes sb-scroll-bounce {
+  0%, 100% { transform: translate(-50%, 0); }
+  50%      { transform: translate(-50%, 4px); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .sb-scroll-cue { animation: none; }
+}
+.hero { position: relative; }
+@media (max-width: 700px) {
+  .sb-scroll-cue { display: none; }
+}
+
 /* ============================================================
    READING PROGRESS BAR
    ============================================================ */
