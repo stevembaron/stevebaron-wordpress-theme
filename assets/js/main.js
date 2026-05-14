@@ -1068,19 +1068,41 @@
   function initBrandEasterEgg() {
     var brand = document.querySelector('.nav-brand-mark') || document.querySelector('.nav-brand');
     if (!brand) return;
-    var clicks = 0, first = 0;
+
+    // Restore Weather Geek Mode across navigation.
+    try {
+      if (sessionStorage.getItem('sb-weather-geek') === '1') {
+        document.body.classList.add('sb-weather-geek');
+      }
+    } catch (e) {}
+
+    // Persist the click streak across navigation, because the SB mark sits
+    // inside the nav-brand link and clicks 1-4 would normally navigate away.
+    function readState() {
+      try { return JSON.parse(sessionStorage.getItem('sb-brand-streak') || 'null') || { c: 0, t: 0 }; }
+      catch (e) { return { c: 0, t: 0 }; }
+    }
+    function writeState(s) {
+      try { sessionStorage.setItem('sb-brand-streak', JSON.stringify(s)); } catch (e) {}
+    }
+
     brand.addEventListener('click', function (e) {
+      var s = readState();
       var now = Date.now();
-      if (now - first > 2500) { clicks = 0; first = now; }
-      clicks++;
-      if (clicks >= 5) {
-        clicks = 0;
+      if (now - s.t > 2500) { s = { c: 0, t: now }; }
+      s.c++;
+      if (s.c >= 5) {
         e.preventDefault();
-        document.body.classList.toggle('sb-weather-geek');
-        var on = document.body.classList.contains('sb-weather-geek');
+        e.stopPropagation();
+        writeState({ c: 0, t: 0 });
+        var on = !document.body.classList.contains('sb-weather-geek');
+        document.body.classList.toggle('sb-weather-geek', on);
+        try { sessionStorage.setItem('sb-weather-geek', on ? '1' : '0'); } catch (e2) {}
         showAlert(on
           ? '⛈ SEVERE WEATHER GEEK MODE: ACTIVATED. Every cursor is now slightly more meteorological.'
           : 'Weather geek mode disengaged. Calm returning to all surfaces.', 4500);
+      } else {
+        writeState(s);
       }
     });
   }

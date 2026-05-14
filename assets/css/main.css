@@ -902,22 +902,7 @@ img { max-width: 100%; height: auto; display: block; }
 }
 .photo-item:hover img { transform: scale(1.02); }
 
-.photo-caption {
-  position: absolute;
-  left: 8px; right: 8px; bottom: 8px;
-  padding: 8px 12px;
-  background: rgba(0,0,0,.6);
-  color: #fff;
-  border-radius: 6px;
-  font-size: 12px;
-  opacity: 0;
-  transition: opacity .2s;
-  display: flex;
-  justify-content: space-between;
-  font-family: var(--font-mono);
-}
-.photo-item:hover .photo-caption { opacity: 1; }
-.photo-caption-tag { opacity: .7; }
+/* .photo-caption styling lives further down with the hover-overlay rules */
 
 /* ============================================================
    PROJECTS PAGE
