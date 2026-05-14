@@ -3,7 +3,7 @@
  * Steve Baron Theme — functions.php
  */
 
-define( 'STEVEBARON_VERSION', '1.5.0' );
+define( 'STEVEBARON_VERSION', '1.6.0' );
 define( 'STEVEBARON_DIR', get_template_directory() );
 define( 'STEVEBARON_URI', get_template_directory_uri() );
 
@@ -216,6 +216,13 @@ function stevebaron_meta_tags() {
 		$logo_id = get_theme_mod( 'custom_logo' );
 		$image   = $logo_id ? wp_get_attachment_image_url( $logo_id, 'full' ) : '';
 	}
+	if ( ! $image ) {
+		// Theme-provided default OG card (1200x630 PNG)
+		$default_og = STEVEBARON_DIR . '/assets/og-default.png';
+		if ( file_exists( $default_og ) ) {
+			$image = STEVEBARON_URI . '/assets/og-default.png?v=' . filemtime( $default_og );
+		}
+	}
 
 	$title = wp_get_document_title();
 	echo "<meta name=\"description\" content=\"" . esc_attr( $desc ) . "\">\n";
@@ -224,7 +231,12 @@ function stevebaron_meta_tags() {
 	echo "<meta property=\"og:description\" content=\"" . esc_attr( $desc ) . "\">\n";
 	echo "<meta property=\"og:url\" content=\"" . esc_url( $url ) . "\">\n";
 	echo "<meta property=\"og:site_name\" content=\"" . esc_attr( $site_name ) . "\">\n";
-	if ( $image ) echo "<meta property=\"og:image\" content=\"" . esc_url( $image ) . "\">\n";
+	if ( $image ) {
+		echo "<meta property=\"og:image\" content=\"" . esc_url( $image ) . "\">\n";
+		echo "<meta property=\"og:image:width\" content=\"1200\">\n";
+		echo "<meta property=\"og:image:height\" content=\"630\">\n";
+		echo "<meta property=\"og:image:alt\" content=\"" . esc_attr( $title ) . "\">\n";
+	}
 	echo "<meta name=\"twitter:card\" content=\"" . ( $image ? 'summary_large_image' : 'summary' ) . "\">\n";
 	$twitter = get_theme_mod( 'sb_social_twitter', '' );
 	if ( $twitter ) {

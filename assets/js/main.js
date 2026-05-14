@@ -394,6 +394,7 @@
       { name: 'Go: Photos',   url: HOME + 'photos/',     type: 'page' },
       { name: 'Go: Now',      url: HOME + 'now/',        type: 'page' },
       { name: 'Go: Contact',  url: HOME + 'contact/',    type: 'page' },
+      { name: 'Go: Weather',  url: HOME + 'weather/',    type: 'page' },
       { name: 'Toggle dark mode',         type: 'action', action: darkToggleAction },
       { name: 'Subscribe (RSS feed)',     url: HOME + 'feed/',                                  type: 'external' },
       { name: 'View source on GitHub',    url: 'https://github.com/stevembaron/stevebaron-wordpress-theme', type: 'external' },
@@ -700,7 +701,146 @@
     // v1.5 goodies
     initWxTooltips();
     init404FlavorText();
+
+    // v1.6 goodies
+    initWeatherPage();
   });
+
+  // ── Weather page (page-weather.php) ──────────────────────────────────────
+
+  function initWeatherPage() {
+    if (!document.querySelector('[data-weather-now]')) return;
+
+    var FORECAST_URL = 'https://api.weather.gov/gridpoints/SLC/97,176/forecast';
+    var HOURLY_URL   = 'https://api.weather.gov/gridpoints/SLC/97,176/forecast/hourly';
+    var OBS_URL      = 'https://api.weather.gov/stations/KSLC/observations/latest';
+    var SUN_URL      = 'https://api.sunrise-sunset.org/json?lat=40.7608&lng=-111.8910&date=today&formatted=0';
+
+    function setText(sel, v) {
+      var el = document.querySelector(sel);
+      if (el && v !== undefined && v !== null && v !== '') el.textContent = v;
+    }
+
+    function cToF(c) { return c == null ? null : Math.round(c * 9 / 5 + 32); }
+    function mpsToMph(m) { return m == null ? null : Math.round(m * 2.237); }
+    function paToInHg(p) { return p == null ? null : (p * 0.0002953).toFixed(2); }
+    function mToMi(m) { return m == null ? null : (m * 0.000621371).toFixed(1); }
+    function fmtTime(iso) {
+      try {
+        return new Intl.DateTimeFormat(undefined, { hour: 'numeric', minute: '2-digit' }).format(new Date(iso));
+      } catch (e) { return iso; }
+    }
+    function fmtDuration(ms) {
+      var totalMin = Math.round(ms / 60000);
+      var h = Math.floor(totalMin / 60);
+      var m = totalMin % 60;
+      return h + 'h ' + (m < 10 ? '0' : '') + m + 'm';
+    }
+    function degToCompass(deg) {
+      if (deg == null) return '';
+      var dirs = ['N','NNE','NE','ENE','E','ESE','SE','SSE','S','SSW','SW','WSW','W','WNW','NW','NNW'];
+      return dirs[Math.round(deg / 22.5) % 16];
+    }
+
+    // ── Current observation
+    fetch(OBS_URL, { headers: { 'Accept': 'application/geo+json' } })
+      .then(function (r) { return r.ok ? r.json() : null; })
+      .then(function (data) {
+        if (!data || !data.properties) return;
+        var p = data.properties;
+        var tempF = cToF(p.temperature && p.temperature.value);
+        var dewF  = cToF(p.dewpoint && p.dewpoint.value);
+        var feelsF = cToF((p.windChill && p.windChill.value != null) ? p.windChill.value
+                       : (p.heatIndex && p.heatIndex.value != null) ? p.heatIndex.value
+                       : (p.temperature && p.temperature.value));
+        var windMph  = mpsToMph(p.windSpeed && p.windSpeed.value);
+        var windDir  = degToCompass(p.windDirection && p.windDirection.value);
+        var humidity = p.relativeHumidity && p.relativeHumidity.value != null ? Math.round(p.relativeHumidity.value) : null;
+        var pressure = paToInHg(p.barometricPressure && p.barometricPressure.value);
+        var visibility = mToMi(p.visibility && p.visibility.value);
+        var brief = p.textDescription || '';
+
+        setText('[data-wx-temp]',   tempF != null ? tempF : '—');
+        setText('[data-wx-short]',  brief);
+        setText('[data-wx-feels]',  feelsF != null ? feelsF + '°F' : '—');
+        setText('[data-wx-wind]',   windMph != null ? (windMph + ' mph' + (windDir ? ' ' + windDir : '')) : '—');
+        setText('[data-wx-humidity]',  humidity != null ? humidity + '%' : '—');
+        setText('[data-wx-dew]',       dewF != null ? dewF + '°F' : '—');
+        setText('[data-wx-pressure]',  pressure != null ? pressure + ' inHg' : '—');
+        setText('[data-wx-visibility]', visibility != null ? visibility + ' mi' : '—');
+
+        var icon = forecastEmoji(brief);
+        setText('[data-wx-icon]', icon);
+
+        var updated = p.timestamp ? fmtTime(p.timestamp) : null;
+        if (updated) {
+          var lead = document.querySelector('[data-weather-updated]');
+          if (lead) lead.textContent = 'Currently in Salt Lake City. Last observation at KSLC: ' + updated + '.';
+        }
+      })
+      .catch(function () {});
+
+    // ── 7-day forecast
+    fetch(FORECAST_URL, { headers: { 'Accept': 'application/geo+json' } })
+      .then(function (r) { return r.ok ? r.json() : null; })
+      .then(function (data) {
+        var grid = document.querySelector('[data-wx-forecast]');
+        if (!grid || !data || !data.properties) return;
+        // Group periods into day pairs (day + night)
+        var periods = data.properties.periods || [];
+        var byDate = {};
+        periods.forEach(function (p) {
+          var key = (p.startTime || '').slice(0, 10);
+          if (!byDate[key]) byDate[key] = {};
+          if (p.isDaytime) byDate[key].day = p; else byDate[key].night = p;
+        });
+        var keys = Object.keys(byDate).sort().slice(0, 7);
+        var html = '';
+        keys.forEach(function (k, i) {
+          var pair = byDate[k];
+          var src = pair.day || pair.night;
+          if (!src) return;
+          var label;
+          try {
+            label = i === 0
+              ? 'Today'
+              : new Intl.DateTimeFormat(undefined, { weekday: 'short' }).format(new Date(src.startTime));
+          } catch (e) { label = src.name; }
+          var high = pair.day   ? pair.day.temperature   : null;
+          var low  = pair.night ? pair.night.temperature : null;
+          var brief = (pair.day || pair.night).shortForecast || '';
+          html +=
+            '<div class="forecast-day">' +
+              '<div class="forecast-day-label">' + escapeHtml(label) + '</div>' +
+              '<div class="forecast-day-icon">' + forecastEmoji(brief) + '</div>' +
+              '<div class="forecast-day-temps">' +
+                (high != null ? '<strong>' + high + '°</strong>' : '') +
+                (low  != null ? '<span class="muted">' + low + '°</span>' : '') +
+              '</div>' +
+              '<div class="forecast-day-brief">' + escapeHtml(brief.toLowerCase()) + '</div>' +
+            '</div>';
+        });
+        grid.innerHTML = html || '<div class="forecast-placeholder mono muted">Forecast unavailable right now.</div>';
+      })
+      .catch(function () {});
+
+    // ── Sunrise / sunset
+    fetch(SUN_URL)
+      .then(function (r) { return r.ok ? r.json() : null; })
+      .then(function (data) {
+        if (!data || data.status !== 'OK' || !data.results) return;
+        var s = data.results;
+        setText('[data-wx-sunrise]', fmtTime(s.sunrise));
+        setText('[data-wx-noon]',    fmtTime(s.solar_noon));
+        setText('[data-wx-sunset]',  fmtTime(s.sunset));
+        setText('[data-wx-daylight]', fmtDuration((new Date(s.sunset) - new Date(s.sunrise))));
+      })
+      .catch(function () {});
+  }
+
+  function escapeHtml(s) {
+    return (s + '').replace(/[&<>"]/g, function (m) { return { '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;' }[m]; });
+  }
 
   // ── Wx-term tooltip definitions (footer rotator) ─────────────────────────
 

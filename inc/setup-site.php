@@ -32,6 +32,7 @@ function stevebaron_expected_pages(): array {
 		'photos'   => [ 'title' => 'Photos',   'template' => 'page-photos.php',    'role' => null,    'in_menu' => true  ],
 		'now'      => [ 'title' => 'Now',      'template' => 'page-now.php',       'role' => null,    'in_menu' => true  ],
 		'contact'  => [ 'title' => 'Contact',  'template' => 'page-contact.php',   'role' => null,    'in_menu' => true  ],
+		'weather'  => [ 'title' => 'Weather',  'template' => 'page-weather.php',   'role' => null,    'in_menu' => false ],
 	];
 }
 
