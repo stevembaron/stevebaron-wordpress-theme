@@ -253,6 +253,7 @@ function stevebaron_seed_projects(): array {
 			'year'   => '2021 — 2023',
 			'status' => 'Shipped',
 			'order'  => 1,
+			'image'  => 'fox-weather',
 		],
 		[
 			'title'  => 'Tribune National Digital Platform',
@@ -260,6 +261,7 @@ function stevebaron_seed_projects(): array {
 			'year'   => '2013 — 2019',
 			'status' => 'Shipped',
 			'order'  => 2,
+			'image'  => 'tribune',
 		],
 		[
 			'title'  => 'First Live-Video Weather App',
@@ -267,6 +269,7 @@ function stevebaron_seed_projects(): array {
 			'year'   => '2008 — 2013',
 			'status' => 'Shipped',
 			'order'  => 3,
+			'image'  => 'kfor',
 		],
 		[
 			'title'  => 'Customized WordPress CMS for Local TV',
@@ -274,8 +277,61 @@ function stevebaron_seed_projects(): array {
 			'year'   => '2008 — 2013',
 			'status' => 'Shipped',
 			'order'  => 4,
+			'image'  => 'local-tv',
 		],
 	];
+}
+
+/**
+ * Sideloads an image file from the theme into the Media Library and
+ * returns the new attachment ID. Returns 0 on failure.
+ *
+ * Tries common extensions for the given basename (png/jpg/jpeg/webp).
+ */
+function stevebaron_sideload_project_image( string $basename, int $parent_post_id ): int {
+	if ( $basename === '' ) return 0;
+
+	$dir = STEVEBARON_DIR . '/assets/projects/';
+	$candidates = [ '.png', '.jpg', '.jpeg', '.webp' ];
+	$src_path = '';
+	foreach ( $candidates as $ext ) {
+		if ( file_exists( $dir . $basename . $ext ) ) {
+			$src_path = $dir . $basename . $ext;
+			break;
+		}
+	}
+	if ( ! $src_path ) return 0;
+
+	if ( ! function_exists( 'wp_insert_attachment' ) ) {
+		require_once ABSPATH . 'wp-admin/includes/file.php';
+		require_once ABSPATH . 'wp-admin/includes/image.php';
+	}
+
+	$upload = wp_upload_dir();
+	if ( ! empty( $upload['error'] ) ) return 0;
+	$target_dir  = $upload['path'];
+	$target_name = wp_unique_filename( $target_dir, basename( $src_path ) );
+	$target_path = trailingslashit( $target_dir ) . $target_name;
+
+	if ( ! @copy( $src_path, $target_path ) ) return 0;
+
+	$filetype = wp_check_filetype( $target_name );
+	$attach_id = wp_insert_attachment(
+		[
+			'post_mime_type' => $filetype['type'] ?: 'image/png',
+			'post_title'     => sanitize_text_field( pathinfo( $target_name, PATHINFO_FILENAME ) ),
+			'post_content'   => '',
+			'post_status'    => 'inherit',
+		],
+		$target_path,
+		$parent_post_id
+	);
+	if ( is_wp_error( $attach_id ) || ! $attach_id ) return 0;
+
+	$meta = wp_generate_attachment_metadata( $attach_id, $target_path );
+	wp_update_attachment_metadata( $attach_id, $meta );
+
+	return (int) $attach_id;
 }
 
 /**
@@ -314,6 +370,12 @@ function stevebaron_insert_seed_content(): array {
 			update_post_meta( $post_id, '_sb_year',   $p['year'] );
 			update_post_meta( $post_id, '_sb_status', $p['status'] );
 			update_post_meta( $post_id, '_sb_seed',   '1' );
+
+			if ( ! empty( $p['image'] ) ) {
+				$attach_id = stevebaron_sideload_project_image( $p['image'], (int) $post_id );
+				if ( $attach_id ) set_post_thumbnail( $post_id, $attach_id );
+			}
+
 			$counts['projects']++;
 		}
 	}
