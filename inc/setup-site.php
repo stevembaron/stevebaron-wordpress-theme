@@ -203,7 +203,7 @@ function stevebaron_create_draft_post( array $args ): int {
  */
 function stevebaron_fox_weather_post_content(): string {
 	$paragraphs = [
-		[ 'p',  "The morning of launch I was up at 4:30, like I had been every morning that week, watching the App Store rankings on a second monitor while waiting for the kettle. By 6:30 AM Eastern we were #4. By the time I finished my coffee we were #2, behind Instagram. Around 9, we passed them. By the afternoon FOX Weather was the #1 free app in the United States — ahead of TikTok, Instagram, Facebook, and every other app on every other phone in the country." ],
+		[ 'p',  "The morning of launch I was up at 4:30, like I had been every morning that week, watching the App Store rankings on a second monitor while waiting for the kettle. By 11 AM Eastern, FOX Weather was the #1 free app in the United States &mdash; ahead of TikTok, Instagram, Facebook, and every other app on every other phone in the country." ],
 		[ 'p',  "If you'd told me at 23, standing in front of a chroma-key wall at WSBT in South Bend, Indiana, that the path from \"weekend meteorologist\" to \"#1 on the App Store\" was a thing that could happen, I would have laughed and asked you to also predict tomorrow's snow totals. But it did happen, and the path through it — almost three decades of broadcast, digital, product, and a long apprenticeship in not knowing what I didn't know — turned out to be exactly what the work needed." ],
 		[ 'p',  "This is a longer post than I usually write. It's the story of how we built FOX Weather, what we got right, what almost broke us, and what I wish I'd known before we started." ],
 		[ 'h2', "Fox Corporation's first new editorial brand in two decades" ],

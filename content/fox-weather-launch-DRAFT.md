@@ -12,7 +12,7 @@ date: TBD
 
 > **Draft.** Not for publication yet. Pasted into the post editor and saved as a draft on the site, this becomes the first long-form essay on stevebaron.com.
 
-The morning of launch I was up at 4:30, like I had been every morning that week, watching the App Store rankings on a second monitor while waiting for the kettle. By 6:30 AM Eastern we were #4. By the time I finished my coffee we were #2, behind Instagram. Around 9, we passed them. By the afternoon FOX Weather was the #1 free app in the United States — ahead of TikTok, Instagram, Facebook, and every other app on every other phone in the country.
+The morning of launch I was up at 4:30, like I had been every morning that week, watching the App Store rankings on a second monitor while waiting for the kettle. By 11 AM Eastern, FOX Weather was the #1 free app in the United States — ahead of TikTok, Instagram, Facebook, and every other app on every other phone in the country.
 
 If you'd told me at 23, standing in front of a chroma-key wall at WSBT in South Bend, Indiana, that the path from "weekend meteorologist" to "#1 on the App Store" was a thing that could happen, I would have laughed and asked you to also predict tomorrow's snow totals. But it did happen, and the path through it — almost three decades of broadcast, digital, product, and a long apprenticeship in not knowing what I didn't know — turned out to be exactly what the work needed.
 
