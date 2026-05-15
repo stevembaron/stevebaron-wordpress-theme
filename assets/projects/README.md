@@ -25,3 +25,26 @@ How they get attached:
 
 If a project doesn't have a matching file here, the project card falls
 back to the placeholder block. No errors, no broken images.
+
+---
+
+## Re-styling raw logos to fit
+
+The theme expects each cover image to be roughly 4:3 (matching the
+800x600 `sb-card` image size). If you have raw brand logos at various
+aspect ratios and want them normalized, run:
+
+```sh
+pip install pillow
+python3 scripts/build-project-images.py \
+  path/to/fox-source.jpg \
+  path/to/tribune-source.png \
+  path/to/kfor-source.png \
+  path/to/local-tv-source.png
+```
+
+Output goes to `assets/projects/{fox-weather,tribune,kfor,local-tv}.png`,
+each 800x600. The FOX Weather slot uses "bleed" mode (the source fills
+the canvas, center-cropped) because the source is a promotional banner
+with its own background; the other three center the logo on a warm-sand
+background with padding so the four cards read consistently in the grid.
