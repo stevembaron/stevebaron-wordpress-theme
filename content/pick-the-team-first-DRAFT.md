@@ -23,17 +23,9 @@ First, *do the hiring work before you let the project hit its sprint cadence.* D
 
 Second, *spend more than you wanted to on the senior hires that will define the shape of everything else.* The lead engineer, the lead designer, the lead PM. These are the people who will hire your next ten people, set your bar, write your operating rhythm, and decide what gets cut. If you compromise on these roles, you compromise on everything downstream of them, forever.
 
-## A FOX Weather hiring story
+## The compounding effect
 
-When we were building FOX Weather we had — I am not exaggerating — six months. From product start to public launch. Mobile, web, livestream, VOD, the whole stack, in six months.
-
-The cheapest mistake I could have made was to hire fast, hire local, hire what the recruiter could send in the door inside two weeks. The bench was thin. The pressure was real.
-
-We did the opposite. The first two senior engineering leads I hired took about ten weeks each from first conversation to start date. I waited. I told the senior leadership team I was waiting. I argued, more than once, that the project was better served by waiting. I got my way. Both of those engineering leads had, separately, shipped consumer mobile products at scale. Both of them were the most senior of three or four candidates we'd considered. Both of them cost more than the next-best candidates.
-
-Inside thirty days I knew it was the most important set of decisions I made during the project. They each hired four to six people in the first quarter. Those people were as good as their leads, which is to say very good. The team got dense quickly. We started shipping things in week six that I'd quietly assumed wouldn't happen until week sixteen.
-
-That's the compounding effect of one good senior hire. You don't get one person better. You get the next set of people better, and then the set after that, and then the operating rhythm that all of those people set is better, and then the product you ship at the end of the rhythm is better. It's the most leveraged decision a leader makes.
+A good senior hire doesn't just get you one good person. It gets you the next set of people better, because senior hires recruit their networks. And it gets you the set after that, because the rhythm and the bar are set by the first round. By month six, the difference between a team that did the team-first work and a team that didn't is enormous and almost impossible to close.
 
 ## Why this is hard
 
