@@ -36,9 +36,9 @@ Everything we did rolled up to one of those three sentences. When I had a hard p
 
 You cannot build a brand-new digital brand with a small team and a small clock. You can build one with a small team and a long clock, or a large team and a short clock, but the third option — small team, short clock — is a way to ship something that nobody uses.
 
-We went large team, short clock. Six months from product start to public launch. I grew the org from a starting cluster of six people to forty-plus across product, design, engineering, content operations, growth, and analytics. We hired people who had launched things before, on purpose. We hired meteorologists who had run their own social channels, because we knew the brand had to live outside the app at least as much as inside it. We hired engineers who had built CMS-driven publishing platforms at scale, because we knew the editorial throughput on day one was going to be terrifying and we couldn't afford to learn that lesson live.
+We went large team, short clock. Six months from product start to public launch, and an organization that hadn't existed two years earlier — product, design, engineering, content operations, growth, analytics, all standing up at the same time. The principle we kept coming back to was the one I'd come back to in every product job since: hire people who have shipped something close to what you're about to build. On purpose. Before the sprint cadence starts.
 
-The single biggest decision I made that year was not a product decision. It was a hiring decision. I picked engineering and design leads who had each, separately, launched mobile products at consumer scale. They were not the cheapest hires available. They were the right hires, and within thirty days I knew it.
+The single biggest set of decisions I made that year were hiring decisions. Not product decisions. Not feature decisions. The senior hires set the bar, set the rhythm, and shaped everything that came after them. I've written more about that thinking [in a separate post](/pick-the-team-first/).
 
 ## App Store Optimization, or how we became the most pre-ordered weather app at launch
 
