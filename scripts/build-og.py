@@ -117,7 +117,7 @@ draw.text((MARGIN, bottom_y - 4), 'stevebaron.com', fill=INK, font=url_font)
 
 # Right-side meta: built with the theme
 meta_font = ImageFont.truetype(FONT_MONO, 16)
-meta = '40.7608  N   ·   111.8910  W   ·   4,226 ft'
+meta = '40.7608  N   ·   111.8910  W   ·   5,100 ft'
 mb = draw.textbbox((0, 0), meta, font=meta_font)
 mw = mb[2] - mb[0]
 draw.text((WIDTH - MARGIN - mw, bottom_y - 4), meta, fill=INK3, font=meta_font)

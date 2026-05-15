@@ -65,7 +65,7 @@
     <?php
     printf(
       /* translators: %s is a rotating weather-observation term */
-      esc_html__( 'Built at 4,226 ft elevation · currently observing %s · press %s anywhere for the command palette', 'stevebaron' ),
+      esc_html__( 'Built at 5,100 ft elevation · currently observing %s · press %s anywhere for the command palette', 'stevebaron' ),
       '<span class="wx-rotate">barometric pressure</span>',
       '<kbd>⌘K</kbd>'
     );

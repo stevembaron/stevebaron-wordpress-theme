@@ -318,6 +318,77 @@ function stevebaron_populate_about_page( bool $force = false ): string {
 	return 'updated';
 }
 
+// ── Now page content ────────────────────────────────────────────────────────
+
+/**
+ * Canonical "Now" snapshot data. Keys map to the _sb_now_* meta fields
+ * defined in inc/meta-boxes.php.
+ */
+function stevebaron_now_page_data(): array {
+	return [
+		'_sb_now_working_on' => 'Pre-launch product reviews and applied-AI workflows for two AI assistant clients, plus an advisory engagement on a consumer-electronics roadmap. Quietly drafting a follow-up to the FOX Weather essay.',
+		'_sb_now_reading'    => '“The Coming Wave” by Mustafa Suleyman, slowly. Daily forecast discussions out of the Salt Lake City NWS office, quickly.',
+		'_sb_now_watching'   => 'The new season of Slow Horses. Whatever live coverage I can find when a winter storm rolls through the Wasatch.',
+		'_sb_now_learning'   => 'How retrieval-augmented generation actually performs at scale — specifically the eval problem. Knowing whether a change made the model better is harder than people think.',
+		'_sb_now_outside'    => 'Skiing Alta and Snowbird whenever the forecast lines up. Trail-running the Bonneville Shoreline when it doesn’t. Bread baking is the indoor version.',
+		'_sb_now_yes_to'     => 'Advisory work, fractional executive roles, and full-time leadership conversations. Founders thinking about AI product readiness, audience growth, or launch GTM.',
+		'_sb_now_no_to'      => 'Speculative speaking gigs without a topic. Cold outreach that doesn’t include what you’re working on.',
+		'_sb_now_location'   => 'Salt Lake City',
+	];
+}
+
+/**
+ * Returns the Gutenberg body of the Now page (the preamble that renders
+ * below the items). Short and editable.
+ */
+function stevebaron_now_page_content(): string {
+	$p1 = "A snapshot of what I&#8217;m focused on right now. It changes. If you&#8217;re seeing this on a different month, the page may be stale &mdash; feel free to ask what&#8217;s actually happening.";
+	return "<!-- wp:paragraph -->\n<p>{$p1}</p>\n<!-- /wp:paragraph -->\n";
+}
+
+/**
+ * Populates the Now page. Writes each meta field if it's currently empty;
+ * if $force is true, overwrites existing values too. Returns:
+ *   'no-page'      — no Now page exists
+ *   'all-filled'   — every meta field has content and force = false
+ *   'updated'      — at least one field was written
+ */
+function stevebaron_populate_now_page( bool $force = false ): string {
+	$now = get_page_by_path( 'now' );
+	if ( ! $now ) return 'no-page';
+
+	$data    = stevebaron_now_page_data();
+	$written = 0;
+
+	foreach ( $data as $key => $value ) {
+		$existing = get_post_meta( $now->ID, $key, true );
+		if ( $existing === '' || $force ) {
+			update_post_meta( $now->ID, $key, $value );
+			$written++;
+		}
+	}
+
+	// Always refresh the "Last updated" stamp to today.
+	$today_existing = get_post_meta( $now->ID, '_sb_now_updated', true );
+	if ( $force || $today_existing === '' ) {
+		update_post_meta( $now->ID, '_sb_now_updated', wp_date( 'F j, Y' ) );
+		$written++;
+	}
+
+	// Populate page body if empty (or forced).
+	$body_current = trim( wp_strip_all_tags( $now->post_content ) );
+	if ( $body_current === '' || $force ) {
+		wp_update_post( [
+			'ID'           => $now->ID,
+			'post_content' => stevebaron_now_page_content(),
+		] );
+		$written++;
+	}
+
+	if ( $written === 0 ) return 'all-filled';
+	return 'updated';
+}
+
 // ── Admin page: Tools → Site Setup ───────────────────────────────────────
 
 add_action( 'admin_menu', function () {
@@ -364,6 +435,13 @@ function stevebaron_setup_admin_page() {
 		&& wp_verify_nonce( sanitize_text_field( wp_unslash( $_POST['stevebaron_about_nonce'] ) ), 'stevebaron_about' ) ) {
 		$force        = ! empty( $_POST['stevebaron_about_force'] );
 		$about_result = stevebaron_populate_about_page( $force );
+	}
+
+	$now_result = '';
+	if ( isset( $_POST['stevebaron_now_nonce'] )
+		&& wp_verify_nonce( sanitize_text_field( wp_unslash( $_POST['stevebaron_now_nonce'] ) ), 'stevebaron_now' ) ) {
+		$force      = ! empty( $_POST['stevebaron_now_force'] );
+		$now_result = stevebaron_populate_now_page( $force );
 	}
 
 	$pages = stevebaron_expected_pages();
@@ -583,6 +661,52 @@ function stevebaron_setup_admin_page() {
 			</p>
 			<button type="submit" class="button button-primary">
 				<?php esc_html_e( 'Populate About page content', 'stevebaron' ); ?>
+			</button>
+		</form>
+
+		<hr style="margin:48px 0 24px;">
+
+		<h2><?php esc_html_e( 'Now page content', 'stevebaron' ); ?></h2>
+		<p>
+			<?php esc_html_e( 'Fills in the seven /now/ snapshot items (Working on · Reading · Watching · Learning · Outside · Saying yes to · Saying no to), the location, and the "last updated" stamp. The body of the page gets a short preamble too. Source-of-truth is content/now-DRAFT.md.', 'stevebaron' ); ?>
+		</p>
+		<p>
+			<?php esc_html_e( 'By default, the populator only writes a field if it\'s currently empty — so it\'s safe to re-run after you\'ve customized individual items. Tick the checkbox to overwrite everything.', 'stevebaron' ); ?>
+		</p>
+
+		<?php if ( $now_result === 'updated' ) : ?>
+			<div class="notice notice-success">
+				<p><strong><?php esc_html_e( 'Now page updated.', 'stevebaron' ); ?></strong></p>
+				<p>
+					<?php $now_page = get_page_by_path( 'now' ); if ( $now_page ) : ?>
+						<a href="<?php echo esc_url( get_edit_post_link( $now_page->ID ) ); ?>" class="button button-primary"><?php esc_html_e( 'Edit in admin →', 'stevebaron' ); ?></a>
+						<a href="<?php echo esc_url( get_permalink( $now_page->ID ) ); ?>" class="button" target="_blank"><?php esc_html_e( 'View Now page', 'stevebaron' ); ?></a>
+					<?php endif; ?>
+				</p>
+			</div>
+		<?php elseif ( $now_result === 'all-filled' ) : ?>
+			<div class="notice notice-warning">
+				<p>
+					<strong><?php esc_html_e( 'Nothing to write.', 'stevebaron' ); ?></strong>
+					<?php esc_html_e( 'All Now-page fields already have content. Tick the override box and re-submit to overwrite them.', 'stevebaron' ); ?>
+				</p>
+			</div>
+		<?php elseif ( $now_result === 'no-page' ) : ?>
+			<div class="notice notice-error">
+				<p><?php esc_html_e( 'No Now page found. Run "Run site setup" above first to create it.', 'stevebaron' ); ?></p>
+			</div>
+		<?php endif; ?>
+
+		<form method="post" style="margin-top:16px;">
+			<?php wp_nonce_field( 'stevebaron_now', 'stevebaron_now_nonce' ); ?>
+			<p style="margin:0 0 12px;">
+				<label>
+					<input type="checkbox" name="stevebaron_now_force" value="1">
+					<?php esc_html_e( 'Overwrite existing field values (use carefully)', 'stevebaron' ); ?>
+				</label>
+			</p>
+			<button type="submit" class="button button-primary">
+				<?php esc_html_e( 'Populate Now page content', 'stevebaron' ); ?>
 			</button>
 		</form>
 	</div>
