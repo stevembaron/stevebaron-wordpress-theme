@@ -1,0 +1,86 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  lint:
+    name: Lint PHP, JS, JSON
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.2'
+          coverage: none
+          tools: none
+
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Lint PHP (syntax check every *.php file)
+        run: |
+          set -e
+          fail=0
+          while IFS= read -r -d '' f; do
+            if ! php -l "$f" > /dev/null 2>&1; then
+              echo "::error file=$f::PHP syntax error"
+              php -l "$f" || true
+              fail=1
+            fi
+          done < <(find . -name "*.php" -not -path "./.git/*" -print0)
+          if [ "$fail" -ne 0 ]; then exit 1; fi
+          echo "All PHP files lint clean."
+
+      - name: Lint JS
+        run: |
+          set -e
+          node --check assets/js/main.js
+          echo "JS lint clean."
+
+      - name: Lint JSON
+        run: |
+          set -e
+          shopt -s globstar nullglob
+          fail=0
+          for f in **/*.json; do
+            case "$f" in
+              ./.git/*|node_modules/*) continue ;;
+            esac
+            if ! python3 -c "import json,sys; json.load(open('$f'))" 2>/dev/null; then
+              echo "::error file=$f::invalid JSON"
+              fail=1
+            fi
+          done
+          if [ "$fail" -ne 0 ]; then exit 1; fi
+          echo "JSON lint clean."
+
+      - name: Validate theme header
+        run: |
+          set -e
+          grep -q "^Theme Name:" style.css || { echo "::error::style.css missing Theme Name"; exit 1; }
+          grep -q "^Version:" style.css    || { echo "::error::style.css missing Version"; exit 1; }
+          grep -q "^Text Domain:" style.css || { echo "::error::style.css missing Text Domain"; exit 1; }
+          echo "Theme header valid."
+
+      - name: Required theme files present
+        run: |
+          set -e
+          required=("style.css" "functions.php" "header.php" "footer.php" "index.php" "front-page.php")
+          for f in "${required[@]}"; do
+            test -f "$f" || { echo "::error::missing required file: $f"; exit 1; }
+          done
+          echo "All required theme files present."

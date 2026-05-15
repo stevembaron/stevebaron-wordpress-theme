@@ -61,6 +61,8 @@ $cards = [
       </div>
     <?php endif; endif; ?>
 
+    <?php if ( function_exists( 'stevebaron_contact_form_render' ) ) stevebaron_contact_form_render(); ?>
+
   </div>
 </section>
 

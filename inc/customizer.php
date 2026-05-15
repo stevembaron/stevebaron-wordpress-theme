@@ -270,6 +270,28 @@ function stevebaron_customize_register( WP_Customize_Manager $wp_customize ) {
 		'type'    => 'textarea',
 	] );
 
+	// Contact form
+	$wp_customize->add_setting( 'sb_contact_form_enabled', [
+		'default'           => true,
+		'sanitize_callback' => function( $v ) { return ! empty( $v ); },
+	] );
+	$wp_customize->add_control( 'sb_contact_form_enabled', [
+		'label'   => __( 'Show contact form on /contact/', 'stevebaron' ),
+		'section' => 'sb_contact',
+		'type'    => 'checkbox',
+	] );
+
+	$wp_customize->add_setting( 'sb_contact_form_to', [
+		'default'           => '',
+		'sanitize_callback' => 'sanitize_email',
+	] );
+	$wp_customize->add_control( 'sb_contact_form_to', [
+		'label'       => __( 'Send contact form submissions to', 'stevebaron' ),
+		'description' => __( 'Leave blank to use the email under Social Links.', 'stevebaron' ),
+		'section'     => 'sb_contact',
+		'type'        => 'email',
+	] );
+
 	// ── Footer ────────────────────────────────────────────────────────────────
 
 	$wp_customize->add_section( 'sb_footer', [

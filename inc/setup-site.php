@@ -135,6 +135,67 @@ add_action( 'after_switch_theme', function () {
 	}
 } );
 
+// ── Shared: convert a simple block-tree to Gutenberg-flavored HTML ──────────
+
+/**
+ * Takes an array of tuples [ 'p'|'h2'|'h3'|'list'|'quote', content ] and
+ * returns Gutenberg-block HTML. Reused by every draft post inserter.
+ */
+function stevebaron_blocks_to_html( array $blocks ): string {
+	$out = '';
+	foreach ( $blocks as $block ) {
+		[ $type, $content ] = $block;
+		if ( $type === 'p' ) {
+			$out .= "<!-- wp:paragraph -->\n<p>{$content}</p>\n<!-- /wp:paragraph -->\n\n";
+		} elseif ( $type === 'h2' ) {
+			$out .= "<!-- wp:heading -->\n<h2 class=\"wp-block-heading\">{$content}</h2>\n<!-- /wp:heading -->\n\n";
+		} elseif ( $type === 'h3' ) {
+			$out .= "<!-- wp:heading {\"level\":3} -->\n<h3 class=\"wp-block-heading\">{$content}</h3>\n<!-- /wp:heading -->\n\n";
+		} elseif ( $type === 'list' ) {
+			$items = '';
+			foreach ( (array) $content as $li ) {
+				$items .= "<!-- wp:list-item -->\n<li>{$li}</li>\n<!-- /wp:list-item -->\n";
+			}
+			$out .= "<!-- wp:list -->\n<ul class=\"wp-block-list\">\n{$items}</ul>\n<!-- /wp:list -->\n\n";
+		} elseif ( $type === 'quote' ) {
+			$out .= "<!-- wp:quote -->\n<blockquote class=\"wp-block-quote\"><p>{$content}</p></blockquote>\n<!-- /wp:quote -->\n\n";
+		}
+	}
+	return $out;
+}
+
+/**
+ * Inserts a draft post idempotently. Returns the post ID (existing or new).
+ *
+ * @param array $args  Required keys: slug, title, excerpt, content, category, tags.
+ */
+function stevebaron_create_draft_post( array $args ): int {
+	$existing = get_page_by_path( $args['slug'], OBJECT, 'post' );
+	if ( $existing ) return (int) $existing->ID;
+
+	$post_id = wp_insert_post( [
+		'post_title'   => $args['title'],
+		'post_name'    => $args['slug'],
+		'post_status'  => 'draft',
+		'post_type'    => 'post',
+		'post_content' => $args['content'],
+		'post_excerpt' => $args['excerpt'] ?? '',
+	], true );
+	if ( is_wp_error( $post_id ) || ! $post_id ) return 0;
+
+	if ( ! empty( $args['category'] ) ) {
+		$cat_id = get_cat_ID( $args['category'] );
+		if ( ! $cat_id ) {
+			$cat = wp_create_category( $args['category'] );
+			if ( ! is_wp_error( $cat ) ) $cat_id = (int) $cat;
+		}
+		if ( $cat_id ) wp_set_post_categories( $post_id, [ $cat_id ] );
+	}
+	if ( ! empty( $args['tags'] ) ) wp_set_post_tags( $post_id, $args['tags'] );
+
+	return (int) $post_id;
+}
+
 // ── FOX Weather launch draft post ────────────────────────────────────────────
 
 /**
@@ -191,54 +252,172 @@ function stevebaron_fox_weather_post_content(): string {
 		[ 'p',  "— Steve" ],
 	];
 
-	$out = '';
-	foreach ( $paragraphs as $block ) {
-		[ $type, $content ] = $block;
-		if ( $type === 'p' ) {
-			$out .= "<!-- wp:paragraph -->\n<p>{$content}</p>\n<!-- /wp:paragraph -->\n\n";
-		} elseif ( $type === 'h2' ) {
-			$out .= "<!-- wp:heading -->\n<h2 class=\"wp-block-heading\">{$content}</h2>\n<!-- /wp:heading -->\n\n";
-		} elseif ( $type === 'list' ) {
-			$items = '';
-			foreach ( (array) $content as $li ) {
-				$items .= "<!-- wp:list-item -->\n<li>{$li}</li>\n<!-- /wp:list-item -->\n";
-			}
-			$out .= "<!-- wp:list -->\n<ul class=\"wp-block-list\">\n{$items}</ul>\n<!-- /wp:list -->\n\n";
-		}
-	}
-	return $out;
+	return stevebaron_blocks_to_html( $paragraphs );
 }
 
-/**
- * Inserts the FOX Weather launch essay as a draft post. Idempotent — if a
- * draft with the same slug already exists, returns its ID without dupes.
- */
 function stevebaron_create_fox_weather_draft(): int {
-	$slug = 'how-we-built-fox-weather-to-1';
-	$existing = get_page_by_path( $slug, OBJECT, 'post' );
-	if ( $existing ) return (int) $existing->ID;
+	return stevebaron_create_draft_post( [
+		'slug'     => 'how-we-built-fox-weather-to-1',
+		'title'    => 'How We Built FOX Weather to #1',
+		'excerpt'  => "Notes on launching Fox Corporation's first new editorial brand in two decades — the team, the bets, and the launch day we ended up ahead of TikTok on the App Store.",
+		'content'  => stevebaron_fox_weather_post_content(),
+		'category' => 'Product',
+		'tags'     => [ 'FOX Weather', 'product', 'launch', 'App Store' ],
+	] );
+}
 
-	$post_id = wp_insert_post( [
-		'post_title'   => 'How We Built FOX Weather to #1',
-		'post_name'    => $slug,
-		'post_status'  => 'draft',
-		'post_type'    => 'post',
-		'post_content' => stevebaron_fox_weather_post_content(),
-		'post_excerpt' => "Notes on launching Fox Corporation's first new editorial brand in two decades — the team, the bets, and the launch day we ended up ahead of TikTok on the App Store.",
-	], true );
+// ── Other draft posts ────────────────────────────────────────────────────────
 
-	if ( is_wp_error( $post_id ) ) return 0;
+function stevebaron_eval_problem_post_content(): string {
+	return stevebaron_blocks_to_html( [
+		[ 'p',  "The single most consistent thing I see when I sit down with an AI team early in a project is this: they can ship a model change in an afternoon, but they can&#8217;t tell you whether the change made things better." ],
+		[ 'p',  "That gap &mdash; between <em>we changed it</em> and <em>we know it&#8217;s better</em> &mdash; is where most AI products quietly die." ],
+		[ 'h2', "The “looks good to me” trap" ],
+		[ 'p',  "Almost every new AI feature I get pulled into begins life in roughly the same way. A small team builds something, the demo is good, leadership funds it, and a year later the product has an organic users-love-it story sitting next to an unsolved we-can&#8217;t-explain-why-it-degrades story." ],
+		[ 'p',  "Underneath, the workflow looks like this: someone changes a prompt, runs five queries through it, eyeballs the responses, says “yeah, that&#8217;s better,” and ships. The team I&#8217;m watching is rigorous about a hundred other things. They&#8217;re not rigorous about this one because the alternative &mdash; a real eval setup &mdash; is significantly harder than it sounds." ],
+		[ 'h2', "Why it’s hard" ],
+		[ 'p',  "A good eval setup needs four things, all of them annoying:" ],
+		[ 'list', [
+			'<strong>A representative dataset.</strong> Not the queries you wish your users were sending, the queries they’re actually sending. Building this dataset is a labeling and cleaning project, not an engineering one, and it never finishes.',
+			'<strong>An automated grader.</strong> Either an LLM-as-judge, a programmatic rule set, or human raters &mdash; but something that scales past the team eyeballing fifty examples per change.',
+			'<strong>Manual spot checks alongside the automated number.</strong> Because the automated grader will be wrong in ways you don’t see coming, and the cheapest signal that something’s gone sideways is still “the model started saying something weird and a human noticed.”',
+			'<strong>A regression flag that fires loudly.</strong> When a change improves your top-line eval score but tanks one of your four most important subcategories, you need that to land in the right person’s inbox before the change ships, not after.',
+		] ],
+		[ 'p',  "That&#8217;s not infrastructure that a fast-moving early-stage team naturally builds. It looks like overhead. It feels like overhead. It is overhead. And then you ship a regression to all of your users and you spend three weeks rolling it back and you remember why it was worth it." ],
+		[ 'h2', "What the better teams do" ],
+		[ 'p',  "The pattern in the small handful of teams who handle this well is the same in every case: they treat evals as a product, not as a testing concern." ],
+		[ 'p',  "They have a person whose job is evals. They have a private eval set that lives separately from prompts and code, gets reviewed and updated weekly, and is treated as a piece of company IP. They have a dashboard. They have a Slack channel where the dashboard&#8217;s red rows post themselves. They have a culture where saying “I&#8217;m not shipping this until the eval moves” is normal, not heroic." ],
+		[ 'p',  "The good news is none of this requires money or seniority. The team I worked with that had the best eval setup I&#8217;ve seen had four engineers and one person on a part-time contract who owned the dataset. The hardest part was getting everyone to take the dataset seriously. The actual code was a hundred lines." ],
+		[ 'h2', "What to do next week" ],
+		[ 'p',  "If you&#8217;re an early-stage team without an eval setup, here&#8217;s the cheapest possible version:" ],
+		[ 'list', [
+			'Pick 50 queries from your real logs. Don’t overthink the sample.',
+			'For each query, write down what a great response would include.',
+			'For each new prompt or model change, run those 50 queries and compare.',
+			'Whoever’s doing the change writes one paragraph explaining what’s better and one paragraph explaining what’s worse. That paragraph goes in the PR.',
+		] ],
+		[ 'p',  "That&#8217;s it. It&#8217;s not a research-grade setup. It will catch most of the worst regressions and most of the most embarrassing degradations. It costs an hour of labeling per fifty examples. It will save you weeks downstream." ],
+		[ 'p',  "The product that&#8217;s a year ahead of you in your category is doing some version of this. You don&#8217;t need a more elaborate version &mdash; you need a started version." ],
+		[ 'p',  '— Steve' ],
+	] );
+}
 
-	$cat_id = get_cat_ID( 'Product' );
-	if ( ! $cat_id ) {
-		$cat = wp_create_category( 'Product' );
-		if ( ! is_wp_error( $cat ) ) $cat_id = (int) $cat;
-	}
-	if ( $cat_id ) wp_set_post_categories( $post_id, [ $cat_id ] );
+function stevebaron_create_eval_problem_draft(): int {
+	return stevebaron_create_draft_post( [
+		'slug'     => 'the-eval-problem',
+		'title'    => 'The Eval Problem',
+		'excerpt'  => "Changing a model is easy. Knowing whether you made it better is the actual job, and most teams haven't built the eval setup that question requires.",
+		'content'  => stevebaron_eval_problem_post_content(),
+		'category' => 'AI',
+		'tags'     => [ 'AI', 'evals', 'RAG', 'product' ],
+	] );
+}
 
-	wp_set_post_tags( $post_id, [ 'FOX Weather', 'product', 'launch', 'App Store' ] );
+function stevebaron_pick_the_team_post_content(): string {
+	return stevebaron_blocks_to_html( [
+		[ 'p',  "Here&#8217;s a thing I believe and have been saying out loud for so long that I&#8217;m a little bored of saying it: when you have a clean sheet of paper and a fixed amount of capital, you should spend it on the team before you spend it on anything else." ],
+		[ 'p',  "Not the technology. Not the user research. Not the brand work. Not the agency. Not even the office. The team." ],
+		[ 'p',  "This is one of those statements that everybody nods along to and then quietly violates the next week. I&#8217;ve watched it happen at every company I&#8217;ve worked at, including ones I was leading. So I want to take a swing at why it&#8217;s hard, and what I&#8217;ve learned makes the team-first instinct stick." ],
+		[ 'h2', "What I mean" ],
+		[ 'p',  "When I say “pick the team first,” I mean two specific things." ],
+		[ 'p',  "First, <em>do the hiring work before you let the project hit its sprint cadence.</em> Don&#8217;t start the work, realize a month in that you&#8217;re under-staffed at one position, and then try to backfill while shipping. By month two, the team is shaped around the gap, the gap is shaped around the team, and you&#8217;re never quite running at full speed again." ],
+		[ 'p',  "Second, <em>spend more than you wanted to on the senior hires that will define the shape of everything else.</em> The lead engineer, the lead designer, the lead PM. These are the people who will hire your next ten people, set your bar, write your operating rhythm, and decide what gets cut. If you compromise on these roles, you compromise on everything downstream of them, forever." ],
+		[ 'h2', "A FOX Weather hiring story" ],
+		[ 'p',  "When we were building FOX Weather we had &mdash; I am not exaggerating &mdash; six months. From product start to public launch. Mobile, web, livestream, VOD, the whole stack, in six months." ],
+		[ 'p',  "The cheapest mistake I could have made was to hire fast, hire local, hire what the recruiter could send in the door inside two weeks. The bench was thin. The pressure was real." ],
+		[ 'p',  "We did the opposite. The first two senior engineering leads I hired took about ten weeks each from first conversation to start date. I waited. I told the senior leadership team I was waiting. I argued, more than once, that the project was better served by waiting. I got my way. Both of those engineering leads had, separately, shipped consumer mobile products at scale. Both of them were the most senior of three or four candidates we&#8217;d considered. Both of them cost more than the next-best candidates." ],
+		[ 'p',  "Inside thirty days I knew it was the most important set of decisions I made during the project. They each hired four to six people in the first quarter. Those people were as good as their leads, which is to say very good. The team got dense quickly. We started shipping things in week six that I&#8217;d quietly assumed wouldn&#8217;t happen until week sixteen." ],
+		[ 'p',  "That&#8217;s the compounding effect of one good senior hire. You don&#8217;t get one person better. You get the next set of people better, and then the set after that, and then the operating rhythm that all of those people set is better, and then the product you ship at the end of the rhythm is better. It&#8217;s the most leveraged decision a leader makes." ],
+		[ 'h2', "Why this is hard" ],
+		[ 'p',  "Three reasons, in roughly increasing order of importance." ],
+		[ 'p',  "<strong>The budget conversation is uncomfortable.</strong> Senior hires cost more than the budget you have. You will have to ask for the budget to be moved. The person whose budget it is will not love this. You will have to win that conversation, sometimes more than once. Most leaders don&#8217;t win it because they don&#8217;t try as hard as the conversation requires." ],
+		[ 'p',  "<strong>The timeline conversation is also uncomfortable.</strong> Senior hires take longer to land. Your CFO and your board are watching the ramp. Telling them “we&#8217;re going slower for the first quarter because I&#8217;m waiting for the right CTO” is a difficult sentence to say. It is also almost always the right sentence to say." ],
+		[ 'p',  "<strong>You have to be honest about who&#8217;s “the right hire.”</strong> This is the one I see leaders get wrong most. The right hire is not the most-impressive-credentialed candidate. The right hire is the one who fits the <em>specific</em> shape of the work. A brilliant ex-FAANG engineer who has only ever worked on a thousand-person platform team can be exactly wrong for a five-person early-stage product. A scrappy generalist with mid-tier resume signal can be exactly right. You have to interview for the shape, not the brand on the resume." ],
+		[ 'h2', "What “the right hire” looks like" ],
+		[ 'p',  "A few signals I&#8217;ve learned to weight, in order:" ],
+		[ 'list', [
+			'<strong>They have shipped something close to what you’re trying to ship.</strong> Not perfectly the same thing. But close enough that their pattern-matching is going to fire correctly when something goes sideways. This is worth more than every other signal combined.',
+			'<strong>You leave the conversation having learned something.</strong> If you walked out of the interview thinking the candidate is great and yourself is also great, you weren’t listening. The right senior hire is one whose thinking on the problem is better than yours in at least one important way.',
+			'<strong>They make decisions in front of you.</strong> A candidate who can move from “let me think about that” to a clear position inside a thirty-minute conversation is a candidate who can lead. A candidate who hedges every answer is going to hedge with their team too.',
+			'<strong>They turn down something you offer.</strong> If a candidate accepts everything you put in front of them &mdash; title, comp, scope, location, the whole package, no pushback &mdash; you’re either over-paying or hiring someone who’s going to take the same posture with the rest of their job.',
+		] ],
+		[ 'h2', "What I do now" ],
+		[ 'p',  "These days, the engagements I&#8217;m most often pulled into are pre-launch product reviews for early-stage AI companies. The single most consistent question I&#8217;m asked is “what should we be doing right now to set this up for success?” And in seventy percent of cases, the honest answer is: <em>figure out who&#8217;s missing from the team, hire them before you do anything else, and stop trying to make the current team do the job the missing person is supposed to do.</em>" ],
+		[ 'p',  "This usually doesn&#8217;t make me popular with the founder. The founder wants to talk about the product. I get it. But I&#8217;ve seen this play out enough times now that I&#8217;m willing to be the unpopular voice in the room for the thirty minutes it takes to make the point." ],
+		[ 'p',  "Pick the team first. Everything else is downstream." ],
+		[ 'p',  '— Steve' ],
+	] );
+}
 
-	return (int) $post_id;
+function stevebaron_create_pick_the_team_draft(): int {
+	return stevebaron_create_draft_post( [
+		'slug'     => 'pick-the-team-first',
+		'title'    => 'Pick the Team First',
+		'excerpt'  => "The single highest-leverage decision in any product effort is the people you put in the room. Most leaders know this and still get it wrong, because the right team is rarely the cheapest team.",
+		'content'  => stevebaron_pick_the_team_post_content(),
+		'category' => 'Product',
+		'tags'     => [ 'team', 'hiring', 'leadership', 'product' ],
+	] );
+}
+
+function stevebaron_tribune_migration_post_content(): string {
+	return stevebaron_blocks_to_html( [
+		[ 'p',  "Somewhere on a hard drive I no longer have access to, there&#8217;s a slide I made in 2016 that opens with one sentence: <em>“the CMS is the single most expensive piece of software we own, and almost no one outside this room knows that.”</em>" ],
+		[ 'p',  "The pitch in that deck was that Tribune Media should stop running its proprietary Rails CMS for its 40-station local TV digital network and move the whole portfolio onto WordPress VIP. The eventual answer was yes. The path between yes and done took about a year. The savings were close to 80% of the platform line. The audience grew. The team retained. I want to write a little of this down because I get asked about it more than I expected to." ],
+		[ 'h2', "What we were starting with" ],
+		[ 'p',  "A custom Rails CMS that had been built inside the company over the course of a decade. Forty-plus station websites running on it. Custom integrations to every weather and news and ad vendor in the building. A small engineering team responsible for keeping the whole thing alive, plus a much larger ops team responsible for the editorial workflow on top of it." ],
+		[ 'p',  "The CMS worked. That&#8217;s the important thing to acknowledge up front. It served roughly 100 million monthly uniques. It supported live video. It had a custom WYSIWYG. It was not, by any reasonable measure, broken software." ],
+		[ 'p',  "It was also, by any reasonable measure, the wrong software for the next five years. The team to maintain it was expensive. Every new vendor integration was a custom build. Every editorial feature request waited in a queue behind every operational fix. The engineers maintaining it were good engineers, but they were doing the work of three engineers each, and we couldn&#8217;t hire fast enough to catch up." ],
+		[ 'p',  "We had also lost something subtle: control over our own roadmap. Every editorial improvement we wanted to make required platform engineering hours we didn&#8217;t have. We were running a content business and most of our engineering capacity went into keeping the lights on for a content system, not into improving the content business." ],
+		[ 'h2', "Why WordPress VIP" ],
+		[ 'p',  "I knew when I started writing the proposal that WordPress would be a controversial answer inside the building. WordPress had, and still has, a reputation problem in big media &mdash; “the thing your daughter&#8217;s blog runs on” &mdash; which is mostly unfair and is also mostly beside the point." ],
+		[ 'p',  "The case I made was a four-line case:" ],
+		[ 'list', [
+			'<strong>The ops team will be more productive immediately.</strong> Most journalists and producers either already know WordPress or learn it in an afternoon. Our custom CMS took a week of training and a permanent help desk.',
+			'<strong>The vendor ecosystem is enormous and free.</strong> Every weather widget, every ad partner, every analytics tool already has a WordPress integration that someone else maintains.',
+			'<strong>WordPress VIP runs the platform, not us.</strong> Scaling, security, uptime, edge caching, DDoS protection &mdash; all of that becomes someone else’s job. Our small engineering team can focus on differentiating work.',
+			'<strong>The cost line is dramatically lower.</strong> Replacing the proprietary stack and its associated headcount with the VIP contract was roughly an 80% reduction in run cost, even accounting for the migration spend.',
+		] ],
+		[ 'p',  "The fourth bullet was the bullet that closed the deal. The other three were what made it the right answer instead of just the cheap answer." ],
+		[ 'h2', "The plan" ],
+		[ 'p',  "A year, structured roughly like this:" ],
+		[ 'list', [
+			'<strong>Q1: One station, end-to-end.</strong> Pick a station nobody loves. Cut over their site to WordPress VIP. Solve every integration problem on that one site. Document everything. Train one editorial team.',
+			'<strong>Q2: Five stations, in waves.</strong> Reuse everything from Q1. Test all the load conditions. Solve the SEO redirect problem at scale.',
+			'<strong>Q3: Twenty stations.</strong> Production at speed. Editorial training in batches.',
+			'<strong>Q4: The rest, plus the legacy decommission.</strong> Including the conversations with vendors whose Rails integrations were now permanently obsolete.',
+		] ],
+		[ 'p',  "The thing I am most proud of in retrospect is that we did not slip the schedule. We finished the quarter ahead of forecast on the run rate and shipped the last station three days early." ],
+		[ 'h2', "What went well" ],
+		[ 'p',  "A few things, mostly people-shaped:" ],
+		[ 'list', [
+			'The team. The migration leads on both the engineering and the editorial-ops sides were people who had been at the company long enough to know where every body was buried. You cannot do this work with new hires. You need institutional memory.',
+			'The decision to invest in one station completely before opening the next one. The Q1 station took twelve weeks. We spent another four weeks just polishing it. By the time we started Q2, we had a template that worked. Every later station took two to three weeks.',
+			'The migration toolchain. We built a single migration script that took the proprietary CMS&#8217;s content export, ran a transform pass, and wrote it directly into WordPress VIP. We tested the transform on three months of historical content per station before we cut over. Catastrophic edge cases were found in the test pass, not in production.',
+			'The decision to write the editorial training as a self-paced video course rather than running in-person training for every station. The course was good. The stations took it in their own pace. The help desk volume on launch days was a quarter of what we expected.',
+		] ],
+		[ 'h2', "What I’d do differently" ],
+		[ 'p',  "Three things, in roughly increasing order of regret:" ],
+		[ 'p',  "<strong>We under-invested in the editorial features that WordPress doesn&#8217;t have out of the box.</strong> We assumed that since WordPress can do almost everything, the gaps could wait. The gaps could not wait. Local TV stations have specific editorial workflows &mdash; breaking-news cut-ins, weather alert templates, election-night live blogs &mdash; that needed bespoke work, and we started that work later than we should have." ],
+		[ 'p',  "<strong>We were slow to deprecate the proprietary CMS.</strong> We kept it running in parallel for too long because it was the safety net. The safety net was expensive. Once a station migrated successfully, we should have moved on to retiring that station&#8217;s old environment within thirty days. We waited closer to ninety, on average. That choice cost real money." ],
+		[ 'p',  "<strong>We didn&#8217;t tell the story externally well enough.</strong> This was an 80% cost reduction on a major platform line, done in a year, on a national publishing network. It should have been a press story. We told it internally; we did not tell it externally. I think there was a missed opportunity to recruit talent into the team on the strength of the work itself." ],
+		[ 'h2', "The thing I think about most" ],
+		[ 'p',  "In the years since, I&#8217;ve watched a lot of media companies wrestle with this same decision. Almost all of them eventually move to a more modern, more open, more vendor-rich CMS. Almost all of them take longer than they thought they would. Almost all of them save a lot of money on the way." ],
+		[ 'p',  "The thing I wish someone had told me before we started: <em>the migration is the easy part.</em> The migration is mechanical. The hard part is the cultural shift inside the engineering and editorial teams from “we run our own everything” to “we participate in an ecosystem someone else runs.” That mindset shift takes longer than the codebase shift, and it&#8217;s the thing that determines whether you actually realize the value of the move." ],
+		[ 'p',  "If you&#8217;re staring at a custom CMS and a flat cost line and a slow editorial workflow: it&#8217;s almost always the right move. Start with one site, take it all the way to done before you open the next one, and tell the story when you finish." ],
+		[ 'p',  '— Steve' ],
+	] );
+}
+
+function stevebaron_create_tribune_migration_draft(): int {
+	return stevebaron_create_draft_post( [
+		'slug'     => 'how-we-migrated-40-tv-stations-off-a-proprietary-cms-in-a-year',
+		'title'    => 'How We Migrated 40 TV Stations Off a Proprietary CMS in a Year',
+		'excerpt'  => "We took a 40-station national publishing platform off a custom Rails CMS, moved it onto WordPress VIP, and cut platform costs by about 80% in the process. Here's roughly how it went.",
+		'content'  => stevebaron_tribune_migration_post_content(),
+		'category' => 'Product',
+		'tags'     => [ 'Tribune', 'WordPress', 'CMS', 'migration', 'product' ],
+	] );
 }
 
 // ── About page content ───────────────────────────────────────────────────────
@@ -421,13 +600,54 @@ function stevebaron_setup_admin_page() {
 		$reseeded      = true;
 	}
 
-	$fox_draft_id  = 0;
-	$fox_created   = false;
-	if ( isset( $_POST['stevebaron_fox_nonce'] )
-		&& wp_verify_nonce( sanitize_text_field( wp_unslash( $_POST['stevebaron_fox_nonce'] ) ), 'stevebaron_fox' ) ) {
-		$existing      = get_page_by_path( 'how-we-built-fox-weather-to-1', OBJECT, 'post' );
-		$fox_created   = ! $existing;
-		$fox_draft_id  = stevebaron_create_fox_weather_draft();
+	// All shippable draft posts, in display order.
+	$drafts = [
+		[
+			'key'      => 'fox',
+			'nonce'    => 'stevebaron_fox',
+			'title'    => 'How We Built FOX Weather to #1',
+			'slug'     => 'how-we-built-fox-weather-to-1',
+			'create'   => 'stevebaron_create_fox_weather_draft',
+			'subject'  => __( 'FOX Weather launch essay', 'stevebaron' ),
+			'desc'     => __( 'The story of building FOX Weather from a whiteboard to #1 on the US App Store. ~1,200 words.', 'stevebaron' ),
+		],
+		[
+			'key'      => 'eval',
+			'nonce'    => 'stevebaron_eval',
+			'title'    => 'The Eval Problem',
+			'slug'     => 'the-eval-problem',
+			'create'   => 'stevebaron_create_eval_problem_draft',
+			'subject'  => __( 'AI eval problem essay', 'stevebaron' ),
+			'desc'     => __( 'Why most AI teams ship changes without knowing if they made things better, and what to do about it. ~700 words.', 'stevebaron' ),
+		],
+		[
+			'key'      => 'team',
+			'nonce'    => 'stevebaron_team',
+			'title'    => 'Pick the Team First',
+			'slug'     => 'pick-the-team-first',
+			'create'   => 'stevebaron_create_pick_the_team_draft',
+			'subject'  => __( 'Pick the team first essay', 'stevebaron' ),
+			'desc'     => __( 'Expansion of the principle from the About page, with a FOX Weather hiring story. ~900 words.', 'stevebaron' ),
+		],
+		[
+			'key'      => 'tribune',
+			'nonce'    => 'stevebaron_tribune',
+			'title'    => 'How We Migrated 40 TV Stations Off a Proprietary CMS in a Year',
+			'slug'     => 'how-we-migrated-40-tv-stations-off-a-proprietary-cms-in-a-year',
+			'create'   => 'stevebaron_create_tribune_migration_draft',
+			'subject'  => __( 'Tribune CMS migration essay', 'stevebaron' ),
+			'desc'     => __( 'The Rails → WordPress VIP migration that cut platform costs 80% across 40 stations. ~1,100 words.', 'stevebaron' ),
+		],
+	];
+
+	$draft_results = []; // key => [ 'id' => int, 'created' => bool ]
+	foreach ( $drafts as $d ) {
+		if ( isset( $_POST[ $d['nonce'] . '_nonce' ] )
+			&& wp_verify_nonce( sanitize_text_field( wp_unslash( $_POST[ $d['nonce'] . '_nonce' ] ) ), $d['nonce'] ) ) {
+			$existing = get_page_by_path( $d['slug'], OBJECT, 'post' );
+			$id       = call_user_func( $d['create'] );
+			$draft_results[ $d['key'] ] = [ 'id' => (int) $id, 'created' => ! $existing ];
+		}
 	}
 
 	$about_result = '';
@@ -449,7 +669,6 @@ function stevebaron_setup_admin_page() {
 	// Counts for the CV/Projects status display
 	$cv_count       = (int) wp_count_posts( 'sb_experience' )->publish;
 	$project_count  = (int) wp_count_posts( 'sb_project' )->publish;
-	$fox_existing   = get_page_by_path( 'how-we-built-fox-weather-to-1', OBJECT, 'post' );
 	?>
 	<div class="wrap">
 		<h1><?php esc_html_e( 'Site Setup', 'stevebaron' ); ?></h1>
@@ -591,35 +810,44 @@ function stevebaron_setup_admin_page() {
 
 		<h2><?php esc_html_e( 'Drafts ready to paste', 'stevebaron' ); ?></h2>
 		<p>
-			<?php esc_html_e( "A long-form essay about launching FOX Weather is shipped with the theme. Click below to insert it as a draft post in your admin — it won't be published. You can then review, edit, and publish when you're ready.", 'stevebaron' ); ?>
+			<?php esc_html_e( 'Long-form essays shipped with the theme. Click any button to insert it as a draft post — nothing is published. Review, edit, and publish in your own time.', 'stevebaron' ); ?>
 		</p>
 
-		<?php if ( $fox_draft_id ) : ?>
-			<div class="notice notice-success">
-				<p>
-					<strong><?php echo $fox_created ? esc_html__( 'Draft created.', 'stevebaron' ) : esc_html__( 'Draft already existed — opening the existing one.', 'stevebaron' ); ?></strong>
-					"How We Built FOX Weather to #1"
-				</p>
-				<p>
-					<a href="<?php echo esc_url( get_edit_post_link( $fox_draft_id ) ); ?>" class="button button-primary"><?php esc_html_e( 'Open in editor →', 'stevebaron' ); ?></a>
-					<a href="<?php echo esc_url( get_preview_post_link( $fox_draft_id ) ); ?>" class="button" target="_blank"><?php esc_html_e( 'Preview', 'stevebaron' ); ?></a>
-				</p>
+		<?php foreach ( $drafts as $d ) :
+			$result   = $draft_results[ $d['key'] ] ?? null;
+			$existing = get_page_by_path( $d['slug'], OBJECT, 'post' );
+		?>
+			<div class="sb-draft-row" style="padding:14px 0;border-bottom:1px solid #eee;">
+				<div style="display:flex;justify-content:space-between;gap:16px;align-items:flex-start;flex-wrap:wrap;">
+					<div style="flex:1;min-width:240px;">
+						<div style="font-size:14px;color:#1a1614;"><strong><?php echo esc_html( $d['title'] ); ?></strong></div>
+						<div style="font-size:12.5px;color:#4a4138;margin-top:2px;"><?php echo esc_html( $d['desc'] ); ?></div>
+					</div>
+					<form method="post" style="margin:0;">
+						<?php wp_nonce_field( $d['nonce'], $d['nonce'] . '_nonce' ); ?>
+						<button type="submit" class="button <?php echo $existing ? '' : 'button-primary'; ?>">
+							<?php echo $existing
+								? esc_html__( 'Open existing draft', 'stevebaron' )
+								: esc_html__( 'Create draft', 'stevebaron' ); ?>
+						</button>
+					</form>
+				</div>
+				<?php if ( $result && $result['id'] ) : ?>
+					<div class="notice notice-success" style="margin:10px 0 0;">
+						<p style="margin:6px 0;">
+							<strong>
+								<?php echo $result['created']
+									? esc_html__( 'Draft created.', 'stevebaron' )
+									: esc_html__( 'Draft already existed.', 'stevebaron' ); ?>
+							</strong>
+							<a href="<?php echo esc_url( get_edit_post_link( $result['id'] ) ); ?>"><?php esc_html_e( 'Open in editor →', 'stevebaron' ); ?></a>
+							·
+							<a href="<?php echo esc_url( get_preview_post_link( $result['id'] ) ); ?>" target="_blank"><?php esc_html_e( 'Preview', 'stevebaron' ); ?></a>
+						</p>
+					</div>
+				<?php endif; ?>
 			</div>
-		<?php endif; ?>
-
-		<form method="post" style="margin-top:16px;">
-			<?php wp_nonce_field( 'stevebaron_fox', 'stevebaron_fox_nonce' ); ?>
-			<button type="submit" class="button button-primary">
-				<?php echo $fox_existing
-					? esc_html__( 'Open the FOX Weather draft', 'stevebaron' )
-					: esc_html__( 'Create FOX Weather launch draft post', 'stevebaron' ); ?>
-			</button>
-			<?php if ( $fox_existing ) : ?>
-				<span class="description" style="margin-left:8px;">
-					<?php esc_html_e( 'A draft already exists. Clicking will just open it again.', 'stevebaron' ); ?>
-				</span>
-			<?php endif; ?>
-		</form>
+		<?php endforeach; ?>
 
 		<hr style="margin:48px 0 24px;">
 

@@ -3,7 +3,7 @@
  * Steve Baron Theme — functions.php
  */
 
-define( 'STEVEBARON_VERSION', '1.6.0' );
+define( 'STEVEBARON_VERSION', '1.7.0' );
 define( 'STEVEBARON_DIR', get_template_directory() );
 define( 'STEVEBARON_URI', get_template_directory_uri() );
 
@@ -252,6 +252,7 @@ require STEVEBARON_DIR . '/inc/customizer.php';
 require STEVEBARON_DIR . '/inc/post-types.php';
 require STEVEBARON_DIR . '/inc/meta-boxes.php';
 require STEVEBARON_DIR . '/inc/setup-site.php';
+require STEVEBARON_DIR . '/inc/contact-form.php';
 
 // ── Helper: reading time ──────────────────────────────────────────────────────
 

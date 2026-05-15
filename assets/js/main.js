@@ -704,7 +704,66 @@
 
     // v1.6 goodies
     initWeatherPage();
+    initContactForm();
   });
+
+  // ── Contact form AJAX enhancement ────────────────────────────────────────
+
+  function initContactForm() {
+    var form = document.querySelector('.contact-form');
+    if (!form) return;
+
+    form.addEventListener('submit', function (e) {
+      // Native form submit works without JS; only intercept if fetch is available.
+      if (!window.fetch || !window.FormData) return;
+      e.preventDefault();
+
+      var btn = form.querySelector('.contact-form-submit');
+      if (btn) { btn.disabled = true; btn.setAttribute('aria-busy', 'true'); }
+
+      // Remove any inline notice from a prior submission
+      form.parentNode.querySelectorAll('.contact-form-success, .contact-form-error').forEach(function (n) { n.remove(); });
+
+      var fd = new FormData(form);
+      fetch(form.action, {
+        method: 'POST',
+        body: fd,
+        headers: { 'Accept': 'application/json' },
+        credentials: 'same-origin',
+      })
+        .then(function (r) { return r.json().then(function (j) { return { ok: r.ok, body: j }; }); })
+        .then(function (res) {
+          if (btn) { btn.disabled = false; btn.removeAttribute('aria-busy'); }
+          if (res.ok && res.body && res.body.ok) {
+            var msg = document.createElement('div');
+            msg.className = 'contact-form-success';
+            msg.setAttribute('role', 'status');
+            msg.innerHTML = '<strong>Sent.</strong> Thanks — your message is on its way. I’ll respond within a day or two.';
+            form.parentNode.insertBefore(msg, form);
+            form.reset();
+          } else {
+            var msg = document.createElement('div');
+            msg.className = 'contact-form-error';
+            msg.setAttribute('role', 'alert');
+            var why = (res.body && res.body.error) || 'unknown';
+            var humanMessages = {
+              nonce:  'Security check failed. Please reload the page and try again.',
+              spam:   'Submission flagged as spam. If this is a mistake, email me directly.',
+              fields: 'Please fill in your name, a valid email, and a message of 20 characters or more.',
+              rate:   'Too many submissions from this address recently. Try again later.',
+              mail:   'The email server rejected the message. Please email me directly.',
+            };
+            msg.innerHTML = '<strong>Couldn’t send.</strong> ' + escapeHtml(humanMessages[why] || 'Unknown error.');
+            form.parentNode.insertBefore(msg, form);
+          }
+        })
+        .catch(function () {
+          if (btn) { btn.disabled = false; btn.removeAttribute('aria-busy'); }
+          // Fall back to a real submit so the no-JS path catches whatever went wrong.
+          form.submit();
+        });
+    });
+  }
 
   // ── Weather page (page-weather.php) ──────────────────────────────────────
 

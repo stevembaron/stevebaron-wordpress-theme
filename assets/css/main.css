@@ -2079,6 +2079,116 @@ body.sb-reading .sb-toc { display: none; }
 .slc-clock [data-slc-clock] { color: var(--ink-2); font-variant-numeric: tabular-nums; }
 
 /* ============================================================
+   CONTACT FORM
+   ============================================================ */
+
+.contact-form-wrap {
+  margin-top: var(--space-lg);
+  padding-top: var(--space-lg);
+  border-top: 1px solid var(--line);
+}
+.contact-form-heading {
+  font-size: 22px;
+  margin: 0 0 22px;
+}
+
+.contact-form { display: flex; flex-direction: column; gap: 18px; }
+.contact-form-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 18px;
+}
+@media (max-width: 600px) { .contact-form-row { grid-template-columns: 1fr; } }
+
+.contact-form-field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.contact-form-field > span {
+  font-family: var(--font-mono);
+  font-size: 11.5px;
+  letter-spacing: .06em;
+  text-transform: uppercase;
+  color: var(--ink-3);
+}
+.contact-form-field > span em {
+  font-style: normal;
+  color: var(--accent);
+}
+.contact-form input,
+.contact-form select,
+.contact-form textarea {
+  font-family: var(--font-body);
+  font-size: 15px;
+  color: var(--ink);
+  background: var(--paper);
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  padding: 12px 14px;
+  width: 100%;
+  transition: border-color .15s, box-shadow .15s;
+  box-sizing: border-box;
+}
+.contact-form textarea {
+  min-height: 140px;
+  resize: vertical;
+  line-height: 1.5;
+}
+.contact-form input:focus,
+.contact-form select:focus,
+.contact-form textarea:focus {
+  outline: none;
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px color-mix(in oklab, var(--accent) 22%, transparent);
+}
+.contact-form input::placeholder,
+.contact-form textarea::placeholder { color: var(--ink-3); }
+
+.contact-form-submit {
+  align-self: flex-start;
+  cursor: pointer;
+  font-size: 15px;
+  padding: 12px 22px;
+}
+.contact-form-submit[disabled] { opacity: .6; cursor: progress; }
+.contact-form-submit-busy { display: inline-block; }
+.contact-form-submit[aria-busy="true"] .contact-form-submit-label { display: none; }
+.contact-form-submit:not([aria-busy="true"]) .contact-form-submit-busy { display: none; }
+
+.contact-form-foot { margin: 0; font-size: 11.5px; }
+
+/* Honeypot is visually hidden but still rendered/focusable for bots. */
+.sb-honey {
+  position: absolute;
+  left: -9999px;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+}
+
+.contact-form-success,
+.contact-form-error {
+  padding: 14px 18px;
+  border-radius: 10px;
+  font-size: 14.5px;
+  margin-bottom: 18px;
+  border: 1px solid var(--line);
+}
+.contact-form-success {
+  background: color-mix(in oklab, #22c55e 12%, var(--paper));
+  border-color: color-mix(in oklab, #22c55e 35%, var(--line));
+  color: var(--ink);
+}
+.contact-form-error {
+  background: color-mix(in oklab, #ef4444 12%, var(--paper));
+  border-color: color-mix(in oklab, #ef4444 38%, var(--line));
+  color: var(--ink);
+}
+.contact-form-success strong,
+.contact-form-error strong { color: var(--accent); margin-right: 6px; }
+
+/* ============================================================
    END-OF-POST "Thanks for reading" CTA card
    ============================================================ */
 
